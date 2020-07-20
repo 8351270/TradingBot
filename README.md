@@ -11,8 +11,9 @@ prod: pointing to production environment
 To build the application from source code  you need to have maven installed (maven.apache.org)
 inside the project main folder build with the command:
 ./mvnw 
-this will generate the .jar file 
-to run the jar and set dev environment:
+this will generate the .jar file
+
+To run the jar and set dev environment:
 
 java -jar target/Trading-Bot-0.0.1-SNAPSHOT.jar -Dspring.profiles.active=dev
 
