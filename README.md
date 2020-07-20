@@ -12,10 +12,11 @@ To build the application from source code  you need to have maven installed (mav
 inside the project main folder build with the command:
 ./mvnw 
 this will generate the .jar file 
-to run the jar and set dev environment
+to run the jar and set dev environment:
 
 java -jar target/Trading-Bot-0.0.1-SNAPSHOT.jar -Dspring.profiles.active=dev
 
-for production
+for production:
+
 java -jar target/Trading-Bot-0.0.1-SNAPSHOT.jar -Dspring.profiles.active=prod
  
