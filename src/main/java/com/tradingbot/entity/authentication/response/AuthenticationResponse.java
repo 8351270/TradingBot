@@ -3,6 +3,7 @@ package com.tradingbot.entity.authentication.response;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.tradingbot.entity.authentication.response.inner.Result;
 
 public class AuthenticationResponse {
 
