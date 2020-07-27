@@ -1,4 +1,4 @@
-package com.tradingbot.service.channel;
+package com.tradingbot.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +24,7 @@ public class SubscriptionServiceImpl {
 //        ret.add(orderBook);
         //TODO NOT WORKING (it will close connection)
         WebSocketMessage<String> lastTrades = new TextMessage("{\"method\":1,\"params\":{\"channel\":\"lasttrades\"},\"id\":2}");
-//        ret.add(lastTrades);
+        ret.add(lastTrades);
 
 //      Supports few data periods: 1 and 60 minutes and 1 day.
         WebSocketMessage<String> candles = new TextMessage("{\"method\":1,\"params\":{\"channel\":\"candles:1:D\"},\"id\":3}");

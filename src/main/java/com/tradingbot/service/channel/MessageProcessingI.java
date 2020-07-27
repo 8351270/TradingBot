@@ -1,4 +1,4 @@
-package com.tradingbot.service;
+package com.tradingbot.service.channel;
 
 import org.json.JSONObject;
 import org.springframework.web.socket.WebSocketMessage;

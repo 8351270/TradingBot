@@ -1,9 +1,7 @@
 package com.tradingbot.service.channel;
 
 import com.google.gson.Gson;
-import com.tradingbot.entity.instruments.InstrumentsResponse;
 import com.tradingbot.entity.lasttrades.LastTradesResponse;
-import com.tradingbot.service.MessageProcessingI;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.WebSocketMessage;
@@ -11,7 +9,7 @@ import org.springframework.web.socket.WebSocketMessage;
 import java.util.List;
 
 @Service
-public class LastTradesServiceImpl implements MessageProcessingI {
+public class LastTradesServiceImpl extends AbstractChannelService<LastTradesResponse>  implements MessageProcessingI {
 
     @Override
     public List<WebSocketMessage<String>> processMessage(JSONObject jsonResponse) {

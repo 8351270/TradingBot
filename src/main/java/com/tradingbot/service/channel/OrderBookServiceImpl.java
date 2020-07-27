@@ -1,7 +1,6 @@
 package com.tradingbot.service.channel;
 
 import com.tradingbot.entity.orderbook.OrderBookItem;
-import com.tradingbot.service.MessageProcessingI;
 import com.tradingbot.service.TradingServiceImpl;
 import org.json.JSONArray;
 import org.json.JSONException;
