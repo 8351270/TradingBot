@@ -1,4 +1,4 @@
-# TradingBoot
+# TradingBot
 
 This project is a simple Spring Boot (2.4) application for Trading on the platform zubr.io
 It connects with the platform via WebSocket, 
