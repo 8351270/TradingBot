@@ -10,7 +10,9 @@ prod: pointing to production environment
 
 To build the application from source code  you need to have maven installed (maven.apache.org)
 inside the project main folder build with the command:
-./mvnw 
+
+./mvnw clean install
+
 this will generate the .jar file
 
 To run the jar and set dev environment:
