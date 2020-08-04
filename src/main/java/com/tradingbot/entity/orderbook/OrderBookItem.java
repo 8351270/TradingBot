@@ -3,6 +3,9 @@ package com.tradingbot.entity.orderbook;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 public class OrderBookItem {
 
     private Long size;
@@ -46,5 +49,15 @@ public class OrderBookItem {
                 ", mantissa=" + mantissa +
                 ", exponent=" + exponent +
                 '}';
+    }
+
+    public static BigDecimal toBigDecimal(OrderBookItem orderBookItem) {
+        BigDecimal ret = new BigDecimal(orderBookItem.getMantissa());
+        int exponent = orderBookItem.getExponent() * -1;
+        BigDecimal base = new BigDecimal(10);
+        base = base.pow(exponent);
+        ret = ret.divide(base, RoundingMode.FLOOR);
+        return ret;
+
     }
 }

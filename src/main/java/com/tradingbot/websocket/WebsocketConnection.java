@@ -32,6 +32,7 @@ public class WebsocketConnection {
             WebSocketHttpHeaders handshakeHeaders = new WebSocketHttpHeaders();
             String headerOrigin = this.environment.getProperty("api.origin");
             String url = this.environment.getProperty("api.url");
+            System.out.println(url);
             assert url != null;
             URI uri =URI.create(url);
 

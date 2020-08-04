@@ -1,17 +1,24 @@
 
-package com.tradingbot.entity.balance.inner;
+package com.tradingbot.entity.balance;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-public class Value {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({
+    "type",
+    "payload"
+})
+public class Value implements Serializable
+{
 
-    @SerializedName("type")
-    @Expose
+    @JsonProperty("type")
     private String type;
-    @SerializedName("payload")
-    @Expose
+    @JsonProperty("payload")
     private Payload payload;
+    private final static long serialVersionUID = 1027006841743380473L;
 
     /**
      * No args constructor for use in serialization
@@ -31,10 +38,12 @@ public class Value {
         this.payload = payload;
     }
 
+    @JsonProperty("type")
     public String getType() {
         return type;
     }
 
+    @JsonProperty("type")
     public void setType(String type) {
         this.type = type;
     }
@@ -44,10 +53,12 @@ public class Value {
         return this;
     }
 
+    @JsonProperty("payload")
     public Payload getPayload() {
         return payload;
     }
 
+    @JsonProperty("payload")
     public void setPayload(Payload payload) {
         this.payload = payload;
     }

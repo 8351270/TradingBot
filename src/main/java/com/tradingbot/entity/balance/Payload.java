@@ -1,38 +1,45 @@
 
-package com.tradingbot.entity.balance.inner;
+package com.tradingbot.entity.balance;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-public class Payload {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({
+    "accountId",
+    "currency",
+    "unrealizedPnl",
+    "ordersMargin",
+    "positionsMargin",
+    "wallet",
+    "borrowed",
+    "available",
+    "updateTime"
+})
+public class Payload implements Serializable
+{
 
-    @SerializedName("accountId")
-    @Expose
-    private Long accountId;
-    @SerializedName("currency")
-    @Expose
+    @JsonProperty("accountId")
+    private Integer accountId;
+    @JsonProperty("currency")
     private String currency;
-    @SerializedName("unrealizedPnl")
-    @Expose
+    @JsonProperty("unrealizedPnl")
     private UnrealizedPnl unrealizedPnl;
-    @SerializedName("ordersMargin")
-    @Expose
+    @JsonProperty("ordersMargin")
     private OrdersMargin ordersMargin;
-    @SerializedName("positionsMargin")
-    @Expose
+    @JsonProperty("positionsMargin")
     private PositionsMargin positionsMargin;
-    @SerializedName("wallet")
-    @Expose
+    @JsonProperty("wallet")
     private Wallet wallet;
-    @SerializedName("borrowed")
-    @Expose
+    @JsonProperty("borrowed")
     private Borrowed borrowed;
-    @SerializedName("available")
-    @Expose
+    @JsonProperty("available")
     private Available available;
-    @SerializedName("updateTime")
-    @Expose
+    @JsonProperty("updateTime")
     private UpdateTime updateTime;
+    private final static long serialVersionUID = -2618545143229623150L;
 
     /**
      * No args constructor for use in serialization
@@ -53,7 +60,7 @@ public class Payload {
      * @param updateTime
      * @param borrowed
      */
-    public Payload(Long accountId, String currency, UnrealizedPnl unrealizedPnl, OrdersMargin ordersMargin, PositionsMargin positionsMargin, Wallet wallet, Borrowed borrowed, Available available, UpdateTime updateTime) {
+    public Payload(Integer accountId, String currency, UnrealizedPnl unrealizedPnl, OrdersMargin ordersMargin, PositionsMargin positionsMargin, Wallet wallet, Borrowed borrowed, Available available, UpdateTime updateTime) {
         super();
         this.accountId = accountId;
         this.currency = currency;
@@ -66,23 +73,27 @@ public class Payload {
         this.updateTime = updateTime;
     }
 
-    public Long getAccountId() {
+    @JsonProperty("accountId")
+    public Integer getAccountId() {
         return accountId;
     }
 
-    public void setAccountId(Long accountId) {
+    @JsonProperty("accountId")
+    public void setAccountId(Integer accountId) {
         this.accountId = accountId;
     }
 
-    public Payload withAccountId(Long accountId) {
+    public Payload withAccountId(Integer accountId) {
         this.accountId = accountId;
         return this;
     }
 
+    @JsonProperty("currency")
     public String getCurrency() {
         return currency;
     }
 
+    @JsonProperty("currency")
     public void setCurrency(String currency) {
         this.currency = currency;
     }
@@ -92,10 +103,12 @@ public class Payload {
         return this;
     }
 
+    @JsonProperty("unrealizedPnl")
     public UnrealizedPnl getUnrealizedPnl() {
         return unrealizedPnl;
     }
 
+    @JsonProperty("unrealizedPnl")
     public void setUnrealizedPnl(UnrealizedPnl unrealizedPnl) {
         this.unrealizedPnl = unrealizedPnl;
     }
@@ -105,10 +118,12 @@ public class Payload {
         return this;
     }
 
+    @JsonProperty("ordersMargin")
     public OrdersMargin getOrdersMargin() {
         return ordersMargin;
     }
 
+    @JsonProperty("ordersMargin")
     public void setOrdersMargin(OrdersMargin ordersMargin) {
         this.ordersMargin = ordersMargin;
     }
@@ -118,10 +133,12 @@ public class Payload {
         return this;
     }
 
+    @JsonProperty("positionsMargin")
     public PositionsMargin getPositionsMargin() {
         return positionsMargin;
     }
 
+    @JsonProperty("positionsMargin")
     public void setPositionsMargin(PositionsMargin positionsMargin) {
         this.positionsMargin = positionsMargin;
     }
@@ -131,10 +148,12 @@ public class Payload {
         return this;
     }
 
+    @JsonProperty("wallet")
     public Wallet getWallet() {
         return wallet;
     }
 
+    @JsonProperty("wallet")
     public void setWallet(Wallet wallet) {
         this.wallet = wallet;
     }
@@ -144,10 +163,12 @@ public class Payload {
         return this;
     }
 
+    @JsonProperty("borrowed")
     public Borrowed getBorrowed() {
         return borrowed;
     }
 
+    @JsonProperty("borrowed")
     public void setBorrowed(Borrowed borrowed) {
         this.borrowed = borrowed;
     }
@@ -157,10 +178,12 @@ public class Payload {
         return this;
     }
 
+    @JsonProperty("available")
     public Available getAvailable() {
         return available;
     }
 
+    @JsonProperty("available")
     public void setAvailable(Available available) {
         this.available = available;
     }
@@ -170,10 +193,12 @@ public class Payload {
         return this;
     }
 
+    @JsonProperty("updateTime")
     public UpdateTime getUpdateTime() {
         return updateTime;
     }
 
+    @JsonProperty("updateTime")
     public void setUpdateTime(UpdateTime updateTime) {
         this.updateTime = updateTime;
     }

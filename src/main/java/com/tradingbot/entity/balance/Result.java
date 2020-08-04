@@ -1,23 +1,34 @@
 
-package com.tradingbot.entity.balance.inner;
+package com.tradingbot.entity.balance;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-public class Result {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({
+    "channel",
+    "data"
+})
+public class Result implements Serializable
+{
 
-    @SerializedName("channel")
-    @Expose
+    @JsonProperty("channel")
     private String channel;
-    @SerializedName("data")
-    @Expose
+    @JsonProperty("data")
     private Data data;
+    private final static long serialVersionUID = 6336226687799934881L;
 
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
     public Result() {
     }
 
     /**
-     *
+     * 
      * @param data
      * @param channel
      */
@@ -27,10 +38,12 @@ public class Result {
         this.data = data;
     }
 
+    @JsonProperty("channel")
     public String getChannel() {
         return channel;
     }
 
+    @JsonProperty("channel")
     public void setChannel(String channel) {
         this.channel = channel;
     }
@@ -40,10 +53,12 @@ public class Result {
         return this;
     }
 
+    @JsonProperty("data")
     public Data getData() {
         return data;
     }
 
+    @JsonProperty("data")
     public void setData(Data data) {
         this.data = data;
     }

@@ -1,13 +1,15 @@
 package com.tradingbot.websocket;
 
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Service;
 import org.springframework.web.socket.WebSocketSession;
 
 import javax.annotation.PostConstruct;
 
 // MAY BE A REST CONTROLLER IN THE FUTURE
-@Controller
+@Component
 public class WebSocketConnectionController {
 
     final WebsocketConnection websocketConnectionService;
@@ -25,7 +27,7 @@ public class WebSocketConnectionController {
 
     @Scheduled(fixedDelay = 5000)
     private void checkConnection(){
-        if (!this.webSocketSession.isOpen()){
+        if (this.webSocketSession==null || !this.webSocketSession.isOpen()){
             this.init();
         }
     }

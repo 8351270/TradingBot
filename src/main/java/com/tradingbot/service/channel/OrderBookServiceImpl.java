@@ -8,6 +8,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketMessage;
 
 import java.util.ArrayList;
@@ -39,7 +40,7 @@ public class OrderBookServiceImpl implements MessageProcessingI {
                     List<OrderBookItem> asksList = this.buildBookOrderItem(jsonResponse.getJSONArray("asks"));
                     List<OrderBookItem> bidsList = this.buildBookOrderItem(jsonResponse.getJSONArray("bids"));
                     if (!bidsList.isEmpty() && !asksList.isEmpty()){
-                        boolean n = this.tradingService.checkForConditions(asksList,bidsList);
+                        return this.tradingService.checkForConditions(asksList,bidsList);
                     }
                 }
             }
@@ -65,5 +66,12 @@ public class OrderBookServiceImpl implements MessageProcessingI {
         }
         return itemsList;
     }
+
+    public List<WebSocketMessage<String>> unsubscribe(){
+        List<WebSocketMessage<String>> ret = new ArrayList<>();
+        WebSocketMessage<String> orderBook = new TextMessage("{\"method\":2,\"params\":{\"channel\":\"orderbook\"},\"id\":1}");
+        ret.add(orderBook);
+        return  ret;
+    };
 
 }

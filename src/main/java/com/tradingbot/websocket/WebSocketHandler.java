@@ -4,6 +4,7 @@ import com.tradingbot.service.*;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
@@ -17,6 +18,8 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
     private boolean connectionClosed = false;
 
+    @Autowired SubscriptionServiceImpl subscriptionService;
+
     final MessageResolverServiceImpl messageResolverService;
     final AuthenticationServiceImpl authenticationService;
 
@@ -28,9 +31,10 @@ public class WebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
 
-        LOGGER.info("Connection established");
+        LOGGER.info("Connection established with server with IP: " );
         WebSocketMessage<String> auth = this.authenticationService.authentication();
         session.sendMessage(auth);
+
     }
 
     @Override
@@ -48,7 +52,6 @@ public class WebSocketHandler extends TextWebSocketHandler {
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
 
-        // TODO this log should be debug
         LOGGER.info("message received: " + message.getPayload());
         JSONObject jsonResponse = new JSONObject(message.getPayload());
         List<WebSocketMessage<String>> messages = this.messageResolverService.processMessage(jsonResponse);

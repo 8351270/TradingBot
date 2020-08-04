@@ -20,6 +20,8 @@ public class BalanceServiceImpl extends AbstractChannelService<BalanceResponse> 
 
         Gson g = new Gson();
         BalanceResponse balanceResponse = g.fromJson(jsonResponse.toString(), BalanceResponse.class);
+        LOGGER.info(balanceResponse.toString());
+
         return null;
     }
 }

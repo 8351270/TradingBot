@@ -1,15 +1,21 @@
 
 package com.tradingbot.entity.balance;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-import com.tradingbot.entity.balance.inner.Result;
+import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-public class BalanceResponse {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({
+    "result"
+})
+public class BalanceResponse implements Serializable
+{
 
-    @SerializedName("result")
-    @Expose
+    @JsonProperty("result")
     private Result result;
+    private final static long serialVersionUID = -5841458004349052544L;
 
     /**
      * No args constructor for use in serialization
@@ -27,10 +33,12 @@ public class BalanceResponse {
         this.result = result;
     }
 
+    @JsonProperty("result")
     public Result getResult() {
         return result;
     }
 
+    @JsonProperty("result")
     public void setResult(Result result) {
         this.result = result;
     }

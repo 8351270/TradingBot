@@ -6,8 +6,10 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketMessage;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -47,6 +49,7 @@ public class MessageResolverServiceImpl implements MessageProcessingI {
         this.tradingService = tradingService;
     }
 
+
     @Override
     public List<WebSocketMessage<String>> processMessage(JSONObject jsonResponse) {
 
@@ -77,8 +80,8 @@ public class MessageResolverServiceImpl implements MessageProcessingI {
                         LOGGER.debug("message received from channel: " + channel);
                         switch (channel) {
                             case "orderbook":
-                                this.orderBookService.processMessage(jsonResponse);
-                                break;
+                                return this.orderBookService.processMessage(jsonResponse);
+//                                return this.orderBookService.unsubscribe();
                             case "tickers":
                                 return this.tickerService.processMessage(jsonResponse);
                             case "candles":
