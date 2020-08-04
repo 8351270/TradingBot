@@ -17,9 +17,8 @@ this will generate the .jar file
 
 To run the jar and set dev environment:
 
-java -jar target/Trading-Bot-0.0.1-SNAPSHOT.jar -Dspring.profiles.active=dev
+java -jar -Dspring.profiles.active=dev target/Trading-Bot-0.0.1-SNAPSHOT.jar
 
 for production:
 
-java -jar target/Trading-Bot-0.0.1-SNAPSHOT.jar -Dspring.profiles.active=prod
- 
+java -jar -Dspring.profiles.active=prod target/Trading-Bot-0.0.1-SNAPSHOT.jar
