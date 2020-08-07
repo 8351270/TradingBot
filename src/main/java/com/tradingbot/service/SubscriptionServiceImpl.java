@@ -17,13 +17,10 @@ public class SubscriptionServiceImpl {
 
 
 
-    public List<WebSocketMessage<String>> getPublicSubscriptions() {
+    public List<WebSocketMessage<String>> getPublicSubscriptions(){
 
         List<WebSocketMessage<String>> ret = new ArrayList<>();
 
-        //TODO NOT WORKING on UAT
-        WebSocketMessage<String> orderBook = new TextMessage("{\"method\":1,\"params\":{\"channel\":\"orderbook\"},\"id\":1}");
-        ret.add(orderBook);
         //TODO NOT WORKING (it will close connection)
 //        WebSocketMessage<String> lastTrades = new TextMessage("{\"method\":1,\"params\":{\"channel\":\"lasttrades\"},\"id\":2}");
 //        ret.add(lastTrades);
@@ -35,17 +32,23 @@ public class SubscriptionServiceImpl {
 //        ret.add(tickers);
 //        WebSocketMessage<String> instruments = new TextMessage("{\"method\":1,\"params\":{\"channel\":\"instruments\"},\"id\":5}");
 //        ret.add(instruments);
-//        WebSocketMessage<String> orders = new TextMessage("{\"method\":1,\"params\":{\"channel\":\"orders\"},\"id\":6}");
-//        ret.add(orders);
-//        WebSocketMessage<String> orderFills = new TextMessage("{\"method\":1,\"params\":{\"channel\":\"orderFills\"},\"id\":7}");
-//        ret.add(orderFills);
-//        WebSocketMessage<String> balance = new TextMessage("{\"method\":1,\"params\":{\"channel\":\"balance\"},\"id\":8}");
-//        ret.add(balance);
-//
-//         NOT WORKING
-//        WebSocketMessage<String> riskSettings = new TextMessage("{\"method\":1,\"params\":{\"riskSettings\":\"instruments\"},\"id\":9}");
+
+//      private channels subscription
+        WebSocketMessage<String> orders = new TextMessage("{\"method\":1,\"params\":{\"channel\":\"orders\"},\"id\":6}");
+        ret.add(orders);
+        WebSocketMessage<String> orderFills = new TextMessage("{\"method\":1,\"params\":{\"channel\":\"orderFills\"},\"id\":7}");
+        ret.add(orderFills);
+        WebSocketMessage<String> balance = new TextMessage("{\"method\":1,\"params\":{\"channel\":\"balance\"},\"id\":8}");
+        ret.add(balance);
+        WebSocketMessage<String> positions = new TextMessage("{\"method\":1,\"params\":{\"channel\":\"positions\"},\"id\":9}");
+        ret.add(positions);
+//        WebSocketMessage<String> riskSettings = new TextMessage("{\"method\":1,\"params\":{\"channel\":\"riskSettings\"},\"id\":9}");
 //        ret.add(riskSettings);
 
+        //TODO NOT WORKING on UAT
+        WebSocketMessage<String> orderBook = new TextMessage("{\"method\":1,\"params\":{\"channel\":\"orderbook\"},\"id\":1}");
+        ret.add(orderBook);
+//        Thread.sleep(2000);
         for (WebSocketMessage<String> m : ret){
             LOGGER.info("Subscribing to channel: "+ m.getPayload());
         }

@@ -69,7 +69,7 @@ public class AuthenticationServiceImpl {
         return new TextMessage(str);
     }
 
-    public void addAuthentication(JSONObject jsonResponse) {
+    public void logAuthentication(JSONObject jsonResponse) {
         Gson g = new Gson();
         AuthenticationResponse ar = g.fromJson(jsonResponse.toString(), AuthenticationResponse.class);
         List<String> permissions = ar.getResult().getValue().getPermissions();

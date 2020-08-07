@@ -16,11 +16,10 @@ public class OrderFillsServiceImpl extends AbstractChannelService<OrderFillsResp
     @Override
     public List<WebSocketMessage<String>> processMessage(JSONObject jsonResponse) {
 
-        Gson g = new Gson();
-        OrderFillsResponse orderFillsResponse = g.fromJson(jsonResponse.toString(), OrderFillsResponse.class);
-        this.addElement(orderFillsResponse);
+//        Gson g = new Gson();
+//        OrderFillsResponse orderFillsResponse = g.fromJson(jsonResponse.toString(), OrderFillsResponse.class);
+//        this.addElement(orderFillsResponse);
         return null;
-
     }
 
 }

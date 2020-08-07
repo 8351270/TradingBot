@@ -31,8 +31,13 @@ public class WebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
 
-        LOGGER.info("Connection established with server with IP: " );
+        LOGGER.info("Connection established with server" );
         WebSocketMessage<String> auth = this.authenticationService.authentication();
+//        List<WebSocketMessage<String>> subs = subscriptionService.getPublicSubscriptions();
+//        for (WebSocketMessage<String> m: subs) {
+//            session.sendMessage(m);
+//        }
+
         session.sendMessage(auth);
 
     }
@@ -64,7 +69,8 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
     @Override
     protected void handlePongMessage(WebSocketSession session, PongMessage message) throws Exception {
-        LOGGER.debug("pong message received " + message.toString());
+        LOGGER.debug("pong message received " + message.getPayload());
+
     }
 
     @Override

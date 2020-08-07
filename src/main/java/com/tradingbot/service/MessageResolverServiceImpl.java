@@ -67,9 +67,8 @@ public class MessageResolverServiceImpl implements MessageProcessingI {
                     if (tag.equals("ok")) {
                         if (jsonResponse.getInt("id") == 101) {
                             LOGGER.debug("User successfully authenticated received: " + jsonResponse.toString());
-                            this.authenticationService.addAuthentication(jsonResponse);
+                            this.authenticationService.logAuthentication(jsonResponse);
                             return this.subscriptionService.getPublicSubscriptions();
-
                         }
                     }
                 } else {

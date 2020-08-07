@@ -10,12 +10,11 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "result"
 })
-public class BalanceResponse implements Serializable
+public class BalanceResponse
 {
 
     @JsonProperty("result")
     private Result result;
-    private final static long serialVersionUID = -5841458004349052544L;
 
     /**
      * No args constructor for use in serialization

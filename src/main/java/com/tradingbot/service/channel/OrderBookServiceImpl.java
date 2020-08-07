@@ -29,6 +29,11 @@ public class OrderBookServiceImpl implements MessageProcessingI {
     @Override
     public List<WebSocketMessage<String>> processMessage(JSONObject jsonResponse) {
 
+//        List<WebSocketMessage<String>> ret = new ArrayList<>();
+//        WebSocketMessage<String> orderBook = new TextMessage("{\"method\":2,\"params\":{\"channel\":\"orderbook\"},\"id\":1}");
+//        ret.add(orderBook);
+//        return ret;
+
         try {
             jsonResponse = jsonResponse.getJSONObject("result").getJSONObject("data").getJSONObject("value");
             if (jsonResponse.has("1")){
@@ -46,7 +51,7 @@ public class OrderBookServiceImpl implements MessageProcessingI {
             }
 
         } catch (JSONException ex){
-            LOGGER.error(ex.getMessage());
+            LOGGER.error("Error while parsing order book ws JSON message " + ex.getMessage());
         }
 
         return null;

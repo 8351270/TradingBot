@@ -22,7 +22,7 @@ public class Payload implements Serializable
 {
 
     @JsonProperty("accountId")
-    private Integer accountId;
+    private Long accountId;
     @JsonProperty("currency")
     private String currency;
     @JsonProperty("unrealizedPnl")
@@ -60,7 +60,7 @@ public class Payload implements Serializable
      * @param updateTime
      * @param borrowed
      */
-    public Payload(Integer accountId, String currency, UnrealizedPnl unrealizedPnl, OrdersMargin ordersMargin, PositionsMargin positionsMargin, Wallet wallet, Borrowed borrowed, Available available, UpdateTime updateTime) {
+    public Payload(Long accountId, String currency, UnrealizedPnl unrealizedPnl, OrdersMargin ordersMargin, PositionsMargin positionsMargin, Wallet wallet, Borrowed borrowed, Available available, UpdateTime updateTime) {
         super();
         this.accountId = accountId;
         this.currency = currency;
@@ -74,16 +74,16 @@ public class Payload implements Serializable
     }
 
     @JsonProperty("accountId")
-    public Integer getAccountId() {
+    public Long getAccountId() {
         return accountId;
     }
 
     @JsonProperty("accountId")
-    public void setAccountId(Integer accountId) {
+    public void setAccountId(Long accountId) {
         this.accountId = accountId;
     }
 
-    public Payload withAccountId(Integer accountId) {
+    public Payload withAccountId(Long accountId) {
         this.accountId = accountId;
         return this;
     }

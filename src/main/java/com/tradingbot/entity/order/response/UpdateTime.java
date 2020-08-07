@@ -1,5 +1,5 @@
 
-package com.tradingbot.entity.order.inner;
+package com.tradingbot.entity.order.response;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

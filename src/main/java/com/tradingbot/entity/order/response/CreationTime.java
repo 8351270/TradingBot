@@ -1,5 +1,5 @@
 
-package com.tradingbot.entity.order.inner;
+package com.tradingbot.entity.order.response;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -13,18 +13,9 @@ public class CreationTime {
     @Expose
     private Long nanos;
 
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
     public CreationTime() {
     }
 
-    /**
-     * 
-     * @param seconds
-     * @param nanos
-     */
     public CreationTime(Long seconds, Long nanos) {
         super();
         this.seconds = seconds;

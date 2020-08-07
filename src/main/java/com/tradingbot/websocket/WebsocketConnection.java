@@ -32,12 +32,12 @@ public class WebsocketConnection {
             WebSocketHttpHeaders handshakeHeaders = new WebSocketHttpHeaders();
             String headerOrigin = this.environment.getProperty("api.origin");
             String url = this.environment.getProperty("api.url");
-            System.out.println(url);
             assert url != null;
             URI uri =URI.create(url);
 
             handshakeHeaders.setOrigin(headerOrigin);
-            handshakeHeaders.set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36");
+            handshakeHeaders.set("User-Agent", "Node.JS MM Bot Example");
+//            Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36
             return webSocketClient.doHandshake(
                     sessionHandler, handshakeHeaders, uri).get();
 

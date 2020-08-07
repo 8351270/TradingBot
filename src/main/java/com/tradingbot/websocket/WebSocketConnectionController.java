@@ -8,7 +8,6 @@ import org.springframework.web.socket.WebSocketSession;
 
 import javax.annotation.PostConstruct;
 
-// MAY BE A REST CONTROLLER IN THE FUTURE
 @Component
 public class WebSocketConnectionController {
 

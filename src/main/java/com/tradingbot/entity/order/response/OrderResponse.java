@@ -1,10 +1,10 @@
 
-package com.tradingbot.entity.order.inner;
+package com.tradingbot.entity.order.response;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class Payload {
+public class OrderResponse {
 
     @SerializedName("id")
     @Expose
@@ -43,29 +43,10 @@ public class Payload {
     @Expose
     private Long instrument;
 
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public Payload() {
+    public OrderResponse() {
     }
 
-    /**
-     * 
-     * @param accountId
-     * @param side
-     * @param creationTime
-     * @param initialSize
-     * @param price
-     * @param updateTime
-     * @param instrument
-     * @param id
-     * @param remainingSize
-     * @param type
-     * @param timeInForce
-     * @param status
-     */
-    public Payload(Long id, Long accountId, String type, String timeInForce, String side, Long initialSize, Long remainingSize, Price price, String status, UpdateTime updateTime, CreationTime creationTime, Long instrument) {
+    public OrderResponse(Long id, Long accountId, String type, String timeInForce, String side, Long initialSize, Long remainingSize, Price price, String status, UpdateTime updateTime, CreationTime creationTime, Long instrument) {
         super();
         this.id = id;
         this.accountId = accountId;
@@ -89,7 +70,7 @@ public class Payload {
         this.id = id;
     }
 
-    public Payload withId(Long id) {
+    public OrderResponse withId(Long id) {
         this.id = id;
         return this;
     }
@@ -102,7 +83,7 @@ public class Payload {
         this.accountId = accountId;
     }
 
-    public Payload withAccountId(Long accountId) {
+    public OrderResponse withAccountId(Long accountId) {
         this.accountId = accountId;
         return this;
     }
@@ -115,7 +96,7 @@ public class Payload {
         this.type = type;
     }
 
-    public Payload withType(String type) {
+    public OrderResponse withType(String type) {
         this.type = type;
         return this;
     }
@@ -128,7 +109,7 @@ public class Payload {
         this.timeInForce = timeInForce;
     }
 
-    public Payload withTimeInForce(String timeInForce) {
+    public OrderResponse withTimeInForce(String timeInForce) {
         this.timeInForce = timeInForce;
         return this;
     }
@@ -141,7 +122,7 @@ public class Payload {
         this.side = side;
     }
 
-    public Payload withSide(String side) {
+    public OrderResponse withSide(String side) {
         this.side = side;
         return this;
     }
@@ -154,7 +135,7 @@ public class Payload {
         this.initialSize = initialSize;
     }
 
-    public Payload withInitialSize(Long initialSize) {
+    public OrderResponse withInitialSize(Long initialSize) {
         this.initialSize = initialSize;
         return this;
     }
@@ -167,7 +148,7 @@ public class Payload {
         this.remainingSize = remainingSize;
     }
 
-    public Payload withRemainingSize(Long remainingSize) {
+    public OrderResponse withRemainingSize(Long remainingSize) {
         this.remainingSize = remainingSize;
         return this;
     }
@@ -180,7 +161,7 @@ public class Payload {
         this.price = price;
     }
 
-    public Payload withPrice(Price price) {
+    public OrderResponse withPrice(Price price) {
         this.price = price;
         return this;
     }
@@ -193,7 +174,7 @@ public class Payload {
         this.status = status;
     }
 
-    public Payload withStatus(String status) {
+    public OrderResponse withStatus(String status) {
         this.status = status;
         return this;
     }
@@ -206,7 +187,7 @@ public class Payload {
         this.updateTime = updateTime;
     }
 
-    public Payload withUpdateTime(UpdateTime updateTime) {
+    public OrderResponse withUpdateTime(UpdateTime updateTime) {
         this.updateTime = updateTime;
         return this;
     }
@@ -219,7 +200,7 @@ public class Payload {
         this.creationTime = creationTime;
     }
 
-    public Payload withCreationTime(CreationTime creationTime) {
+    public OrderResponse withCreationTime(CreationTime creationTime) {
         this.creationTime = creationTime;
         return this;
     }
@@ -232,9 +213,26 @@ public class Payload {
         this.instrument = instrument;
     }
 
-    public Payload withInstrument(Long instrument) {
+    public OrderResponse withInstrument(Long instrument) {
         this.instrument = instrument;
         return this;
     }
 
+    @Override
+    public String toString() {
+        return "OrderResponse{" +
+                "id=" + id +
+                ", accountId=" + accountId +
+                ", type='" + type + '\'' +
+                ", timeInForce='" + timeInForce + '\'' +
+                ", side='" + side + '\'' +
+                ", initialSize=" + initialSize +
+                ", remainingSize=" + remainingSize +
+                ", price=" + price +
+                ", status='" + status + '\'' +
+                ", updateTime=" + updateTime +
+                ", creationTime=" + creationTime +
+                ", instrument=" + instrument +
+                '}';
+    }
 }
