@@ -9,7 +9,7 @@ import org.springframework.web.socket.WebSocketMessage;
 import java.util.List;
 
 @Service
-public class InstrumentServiceImpl extends AbstractChannelService<InstrumentsResponse>  implements MessageProcessingI {
+public class InstrumentServiceImpl implements MessageProcessingI {
 
 
 

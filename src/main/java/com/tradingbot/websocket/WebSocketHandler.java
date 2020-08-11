@@ -4,7 +4,6 @@ import com.tradingbot.service.*;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
@@ -18,25 +17,26 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
     private boolean connectionClosed = false;
 
-    @Autowired SubscriptionServiceImpl subscriptionService;
-
+    final SubscriptionServiceImpl subscriptionService;
     final MessageResolverServiceImpl messageResolverService;
     final AuthenticationServiceImpl authenticationService;
 
-    public WebSocketHandler(MessageResolverServiceImpl messageResolverService, AuthenticationServiceImpl authenticationService) {
+    public WebSocketHandler(MessageResolverServiceImpl messageResolverService, AuthenticationServiceImpl authenticationService, SubscriptionServiceImpl subscriptionService) {
         this.messageResolverService = messageResolverService;
         this.authenticationService = authenticationService;
+        this.subscriptionService = subscriptionService;
     }
+
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
 
         LOGGER.info("Connection established with server" );
         WebSocketMessage<String> auth = this.authenticationService.authentication();
-//        List<WebSocketMessage<String>> subs = subscriptionService.getPublicSubscriptions();
-//        for (WebSocketMessage<String> m: subs) {
-//            session.sendMessage(m);
-//        }
+        List<WebSocketMessage<String>> subs = subscriptionService.getPublicSubscriptions();
+        for (WebSocketMessage<String> m: subs) {
+            session.sendMessage(m);
+        }
 
         session.sendMessage(auth);
 
@@ -57,7 +57,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
 
-        LOGGER.info("message received: " + message.getPayload());
+        LOGGER.debug("message received: " + message.getPayload());
         JSONObject jsonResponse = new JSONObject(message.getPayload());
         List<WebSocketMessage<String>> messages = this.messageResolverService.processMessage(jsonResponse);
         if (messages != null && !messages.isEmpty()){
@@ -70,20 +70,17 @@ public class WebSocketHandler extends TextWebSocketHandler {
     @Override
     protected void handlePongMessage(WebSocketSession session, PongMessage message) throws Exception {
         LOGGER.debug("pong message received " + message.getPayload());
-
     }
 
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-        LOGGER.info("handleTransportError " + exception.getMessage());
+        LOGGER.error("handleTransportError " + exception.getMessage());
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-
-        LOGGER.info("connection closed by server");
+        LOGGER.error("connection closed unexpectedly");
         this.connectionClosed = true;
-
     }
 
     public boolean isConnectionClosed() {

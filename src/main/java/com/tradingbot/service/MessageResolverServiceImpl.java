@@ -29,11 +29,12 @@ public class MessageResolverServiceImpl implements MessageProcessingI {
     final SubscriptionServiceImpl subscriptionService;
     final TickerServiceImpl tickerService;
     final TradingServiceImpl tradingService;
+    final PositionsServiceImpl positionsService;
 
     public MessageResolverServiceImpl(BalanceServiceImpl balanceService, SubscriptionServiceImpl subscriptionService, OrderBookServiceImpl orderBookService,
                                       TickerServiceImpl tickerService, CandleServiceImpl candleService, InstrumentServiceImpl instrumentService,
                                       LastTradesServiceImpl lastTradesService, AuthenticationServiceImpl authenticationService, OrderFillsServiceImpl orderFillsService,
-                                      OrdersServiceImpl orderService, RiskSettingsServiceImpl riskSettingsService, TradingServiceImpl tradingService) {
+                                      OrdersServiceImpl orderService, RiskSettingsServiceImpl riskSettingsService, TradingServiceImpl tradingService,PositionsServiceImpl positionsService) {
 
         this.balanceService = balanceService;
         this.orderBookService = orderBookService;
@@ -47,6 +48,7 @@ public class MessageResolverServiceImpl implements MessageProcessingI {
         this.orderService = orderService;
         this.riskSettingsServiceImpl = riskSettingsService;
         this.tradingService = tradingService;
+        this.positionsService =  positionsService;
     }
 
 
@@ -56,8 +58,14 @@ public class MessageResolverServiceImpl implements MessageProcessingI {
         try {
             String aux = jsonResponse.getString("result");
             if (aux.equals("{}")) {
-                String id = jsonResponse.getString("id");
-                LOGGER.info("Successfully subscribed to channel with id: " + id);
+                int id = jsonResponse.getInt("id");
+                if (id<20){
+                    this.subscriptionService.confirmSubscription(id);
+                }
+//                else {
+//                    this.tradingService.setOrderConfirm(jsonResponse);
+//                }
+
             } else {
                 if (jsonResponse.getJSONObject("result").has("tag")) {
                     String tag = jsonResponse.getJSONObject("result").getString("tag");
@@ -65,14 +73,17 @@ public class MessageResolverServiceImpl implements MessageProcessingI {
                         LOGGER.error("Error message received:" + jsonResponse.toString());
                     }
                     if (tag.equals("ok")) {
-                        if (jsonResponse.getInt("id") == 101) {
-                            LOGGER.debug("User successfully authenticated received: " + jsonResponse.toString());
+                        if (jsonResponse.getInt("id") == 100) {
+                            // log the authentication response
                             this.authenticationService.logAuthentication(jsonResponse);
-                            return this.subscriptionService.getPublicSubscriptions();
+                            // once authenticated subscribe to private channels
+                            return this.subscriptionService.getPrivateSubscriptions();
+                        }else if (jsonResponse.getInt("id")>100){
+                            this.tradingService.setOrderConfirm(jsonResponse);
                         }
                     }
                 } else {
-                    if (jsonResponse.has("id") && jsonResponse.getInt("id") == 101) {
+                    if (jsonResponse.has("id") && jsonResponse.getInt("id") == 100) {
                         LOGGER.info(jsonResponse.toString());
                     } else {
                         String channel = jsonResponse.getJSONObject("result").getString("channel");
@@ -80,7 +91,8 @@ public class MessageResolverServiceImpl implements MessageProcessingI {
                         switch (channel) {
                             case "orderbook":
                                 return this.orderBookService.processMessage(jsonResponse);
-//                                return this.orderBookService.unsubscribe();
+                            case "lasttrades":
+                                return this.lastTradesService.processMessage(jsonResponse);
                             case "tickers":
                                 return this.tickerService.processMessage(jsonResponse);
                             case "candles":
@@ -93,6 +105,8 @@ public class MessageResolverServiceImpl implements MessageProcessingI {
                                 return this.orderFillsService.processMessage(jsonResponse);
                             case "balance":
                                 return this.balanceService.processMessage(jsonResponse);
+                            case "positions":
+                                return this.positionsService.processMessage(jsonResponse);
                             case "riskSettings":
                                 return this.riskSettingsServiceImpl.processMessage(jsonResponse);
 

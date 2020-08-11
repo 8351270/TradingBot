@@ -9,7 +9,7 @@ import org.springframework.web.socket.WebSocketMessage;
 import java.util.List;
 
 @Service
-public class LastTradesServiceImpl extends AbstractChannelService<LastTradesResponse>  implements MessageProcessingI {
+public class LastTradesServiceImpl implements MessageProcessingI {
 
     @Override
     public List<WebSocketMessage<String>> processMessage(JSONObject jsonResponse) {

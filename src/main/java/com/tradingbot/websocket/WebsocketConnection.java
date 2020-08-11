@@ -34,10 +34,9 @@ public class WebsocketConnection {
             String url = this.environment.getProperty("api.url");
             assert url != null;
             URI uri =URI.create(url);
-
             handshakeHeaders.setOrigin(headerOrigin);
             handshakeHeaders.set("User-Agent", "Node.JS MM Bot Example");
-//            Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36
+//          Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36
             return webSocketClient.doHandshake(
                     sessionHandler, handshakeHeaders, uri).get();
 

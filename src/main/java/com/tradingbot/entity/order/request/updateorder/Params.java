@@ -1,5 +1,5 @@
 
-package com.tradingbot.entity.order.request;
+package com.tradingbot.entity.order.request.updateorder;
 
 import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -22,6 +22,7 @@ public class Params implements Serializable
      * 
      */
     public Params() {
+        this.data = new Data();
     }
 
     /**

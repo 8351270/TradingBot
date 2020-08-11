@@ -1,5 +1,5 @@
 
-package com.tradingbot.entity.order.request;
+package com.tradingbot.entity.order.request.neworder;
 
 import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -37,6 +37,7 @@ public class Params_ implements Serializable
      * 
      */
     public Params_() {
+        this.price = new Price();
     }
 
     /**
@@ -148,4 +149,15 @@ public class Params_ implements Serializable
         return this;
     }
 
+    @Override
+    public String toString() {
+        return "Params_{" +
+                "instrument=" + instrument +
+                ", price=" + price +
+                ", size=" + size +
+                ", type='" + type + '\'' +
+                ", timeInForce='" + timeInForce + '\'' +
+                ", side='" + side + '\'' +
+                '}';
+    }
 }

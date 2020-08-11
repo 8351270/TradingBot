@@ -23,10 +23,10 @@ public class OrderResponse {
     private String side;
     @SerializedName("initialSize")
     @Expose
-    private Long initialSize;
+    private Integer initialSize;
     @SerializedName("remainingSize")
     @Expose
-    private Long remainingSize;
+    private Integer remainingSize;
     @SerializedName("price")
     @Expose
     private Price price;
@@ -46,7 +46,7 @@ public class OrderResponse {
     public OrderResponse() {
     }
 
-    public OrderResponse(Long id, Long accountId, String type, String timeInForce, String side, Long initialSize, Long remainingSize, Price price, String status, UpdateTime updateTime, CreationTime creationTime, Long instrument) {
+    public OrderResponse(Long id, Long accountId, String type, String timeInForce, String side, Integer initialSize, Integer remainingSize, Price price, String status, UpdateTime updateTime, CreationTime creationTime, Long instrument) {
         super();
         this.id = id;
         this.accountId = accountId;
@@ -127,28 +127,28 @@ public class OrderResponse {
         return this;
     }
 
-    public Long getInitialSize() {
+    public Integer getInitialSize() {
         return initialSize;
     }
 
-    public void setInitialSize(Long initialSize) {
+    public void setInitialSize(Integer initialSize) {
         this.initialSize = initialSize;
     }
 
-    public OrderResponse withInitialSize(Long initialSize) {
+    public OrderResponse withInitialSize(Integer initialSize) {
         this.initialSize = initialSize;
         return this;
     }
 
-    public Long getRemainingSize() {
+    public Integer getRemainingSize() {
         return remainingSize;
     }
 
-    public void setRemainingSize(Long remainingSize) {
+    public void setRemainingSize(Integer remainingSize) {
         this.remainingSize = remainingSize;
     }
 
-    public OrderResponse withRemainingSize(Long remainingSize) {
+    public OrderResponse withRemainingSize(Integer remainingSize) {
         this.remainingSize = remainingSize;
         return this;
     }

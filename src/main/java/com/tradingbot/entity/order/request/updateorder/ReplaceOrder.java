@@ -1,11 +1,10 @@
 
-package com.tradingbot.entity.order.request;
+package com.tradingbot.entity.order.request.updateorder;
 
 import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import org.json.JSONObject;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -13,7 +12,7 @@ import org.json.JSONObject;
     "params",
     "id"
 })
-public class PlaceNewOrder extends JSONObject implements Serializable
+public class ReplaceOrder implements Serializable
 {
 
     @JsonProperty("method")
@@ -22,13 +21,14 @@ public class PlaceNewOrder extends JSONObject implements Serializable
     private Params params;
     @JsonProperty("id")
     private Integer id;
-    private final static long serialVersionUID = -5098475604088403243L;
+    private final static long serialVersionUID = -1638863475204838628L;
 
     /**
      * No args constructor for use in serialization
      * 
      */
-    public PlaceNewOrder() {
+    public ReplaceOrder() {
+        this.params = new Params();
     }
 
     /**
@@ -37,7 +37,7 @@ public class PlaceNewOrder extends JSONObject implements Serializable
      * @param id
      * @param params
      */
-    public PlaceNewOrder(Integer method, Params params, Integer id) {
+    public ReplaceOrder(Integer method, Params params, Integer id) {
         super();
         this.method = method;
         this.params = params;
@@ -54,7 +54,7 @@ public class PlaceNewOrder extends JSONObject implements Serializable
         this.method = method;
     }
 
-    public PlaceNewOrder withMethod(Integer method) {
+    public ReplaceOrder withMethod(Integer method) {
         this.method = method;
         return this;
     }
@@ -69,7 +69,7 @@ public class PlaceNewOrder extends JSONObject implements Serializable
         this.params = params;
     }
 
-    public PlaceNewOrder withParams(Params params) {
+    public ReplaceOrder withParams(Params params) {
         this.params = params;
         return this;
     }
@@ -84,7 +84,7 @@ public class PlaceNewOrder extends JSONObject implements Serializable
         this.id = id;
     }
 
-    public PlaceNewOrder withId(Integer id) {
+    public ReplaceOrder withId(Integer id) {
         this.id = id;
         return this;
     }

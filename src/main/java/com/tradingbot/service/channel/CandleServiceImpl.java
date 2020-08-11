@@ -11,7 +11,7 @@ import org.springframework.web.socket.WebSocketMessage;
 import java.util.List;
 
 @Service
-public class CandleServiceImpl extends AbstractChannelService<CandlesResponse>  implements MessageProcessingI {
+public class CandleServiceImpl implements MessageProcessingI {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CandleServiceImpl.class);
 

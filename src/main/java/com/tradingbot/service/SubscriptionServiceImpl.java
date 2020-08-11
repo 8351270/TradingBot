@@ -1,5 +1,6 @@
 package com.tradingbot.service;
 
+import com.tradingbot.entity.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -8,52 +9,97 @@ import org.springframework.web.socket.WebSocketMessage;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class SubscriptionServiceImpl {
 
+    private final List<Channel> publicChannels;
+
+    private final List<Channel> privateChannels;
+
+    public SubscriptionServiceImpl() {
+        this.publicChannels = new ArrayList<>();
+        this.privateChannels = new ArrayList<>();
+    }
+
     //TODO keep all the active subscriptions
     private static final Logger LOGGER = LoggerFactory.getLogger(SubscriptionServiceImpl.class);
 
+    public List<WebSocketMessage<String>> getPrivateSubscriptions() {
 
+        List<WebSocketMessage<String>> ret = new ArrayList<>();
+        Channel ch = null;
+        ch = new Channel(6,"orders");
+        privateChannels.add(ch);
+        ch = new Channel(7,"orderFills");
+        privateChannels.add(ch);
+        ch = new Channel(8,"balance");
+        privateChannels.add(ch);
+//        ch = new Channel(9,"positions");
+//        privateChannels.add(ch);
+//        ch = new Channel(10,"riskSettings");
+//        privateChannels.add(ch);
 
-    public List<WebSocketMessage<String>> getPublicSubscriptions(){
+        for (Channel channel:privateChannels) {
+            WebSocketMessage<String> subsMessage = new TextMessage(channel.toSubscribeString());
+            LOGGER.info("Subscribing to channel: "+ channel.getName());
+            ret.add(subsMessage);
+        }
+        return ret;
+    }
+
+    public List<WebSocketMessage<String>> getPublicSubscriptions() {
 
         List<WebSocketMessage<String>> ret = new ArrayList<>();
 
-        //TODO NOT WORKING (it will close connection)
-//        WebSocketMessage<String> lastTrades = new TextMessage("{\"method\":1,\"params\":{\"channel\":\"lasttrades\"},\"id\":2}");
-//        ret.add(lastTrades);
+        Channel ch = new Channel(1,"orderbook");
+        publicChannels.add(ch);
+//        ch = new Channel(2,"lasttrades");
+//        publicChannels.add(ch);
+//        ch = new Channel(3,"candles");
+//        publicChannels.add(ch);
+//        ch = new Channel(4,"tickers");
+//        publicChannels.add(ch);
+//        ch = new Channel(5,"instruments");
+//        publicChannels.add(ch);
 
-//      Supports few data periods: 1 and 60 minutes and 1 day.
-//        WebSocketMessage<String> candles = new TextMessage("{\"method\":1,\"params\":{\"channel\":\"candles:1:D\"},\"id\":3}");
-//        ret.add(candles);
-//        WebSocketMessage<String> tickers = new TextMessage("{\"method\":1,\"params\":{\"channel\":\"tickers\"},\"id\":4}");
-//        ret.add(tickers);
-//        WebSocketMessage<String> instruments = new TextMessage("{\"method\":1,\"params\":{\"channel\":\"instruments\"},\"id\":5}");
-//        ret.add(instruments);
-
-//      private channels subscription
-        WebSocketMessage<String> orders = new TextMessage("{\"method\":1,\"params\":{\"channel\":\"orders\"},\"id\":6}");
-        ret.add(orders);
-        WebSocketMessage<String> orderFills = new TextMessage("{\"method\":1,\"params\":{\"channel\":\"orderFills\"},\"id\":7}");
-        ret.add(orderFills);
-        WebSocketMessage<String> balance = new TextMessage("{\"method\":1,\"params\":{\"channel\":\"balance\"},\"id\":8}");
-        ret.add(balance);
-        WebSocketMessage<String> positions = new TextMessage("{\"method\":1,\"params\":{\"channel\":\"positions\"},\"id\":9}");
-        ret.add(positions);
-//        WebSocketMessage<String> riskSettings = new TextMessage("{\"method\":1,\"params\":{\"channel\":\"riskSettings\"},\"id\":9}");
-//        ret.add(riskSettings);
-
-        //TODO NOT WORKING on UAT
-        WebSocketMessage<String> orderBook = new TextMessage("{\"method\":1,\"params\":{\"channel\":\"orderbook\"},\"id\":1}");
-        ret.add(orderBook);
-//        Thread.sleep(2000);
-        for (WebSocketMessage<String> m : ret){
-            LOGGER.info("Subscribing to channel: "+ m.getPayload());
+        for (Channel channel:publicChannels) {
+            WebSocketMessage<String> subsMessage = new TextMessage(channel.toSubscribeString());
+            LOGGER.info("Subscribing to channel: "+ channel.getName());
+            ret.add(subsMessage);
         }
-
         return ret;
+    }
+
+    public List<WebSocketMessage<String>> unsubscribe(int id){
+        Optional<Channel> ch = publicChannels.stream().filter(x -> x.getId()==id).findFirst();
+        if (ch.isEmpty()){
+            ch = privateChannels.stream().filter(x -> x.getId()==id).findFirst();
+            if (ch.isEmpty()){
+                LOGGER.error("Error confirming subscriptions");
+                return null;
+            }
+        }
+        ch.get().setSubscribed(false);
+        WebSocketMessage<String> subsMessage = new TextMessage(ch.get().toSubscribeString());
+        LOGGER.info("Unsubscribing from channel: "+ ch.get().getName());
+        List<WebSocketMessage<String>> ret = new ArrayList<>();
+        ret.add(subsMessage);
+        return ret;
+    }
+    public void confirmSubscription(int id){
+
+        Optional<Channel> ch = publicChannels.stream().filter(x -> x.getId()==id).findFirst();
+        if (ch.isEmpty()){
+            ch = privateChannels.stream().filter(x -> x.getId()==id).findFirst();
+            if (ch.isEmpty()){
+                LOGGER.error("Error confirming subscriptions");
+                return;
+            }
+        }
+        ch.get().setSubscribed(true);
+        LOGGER.info("Successfully subscribed to channel: " + ch.get().getName());
     }
 
 }

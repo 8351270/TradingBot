@@ -1,5 +1,5 @@
 
-package com.tradingbot.entity.order.request;
+package com.tradingbot.entity.order.request.neworder;
 
 import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonInclude;

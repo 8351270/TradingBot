@@ -1,8 +1,6 @@
 package com.tradingbot.service.channel;
 
 import com.google.gson.Gson;
-import com.tradingbot.entity.balance.BalanceResponse;
-import com.tradingbot.entity.orderbook.OrderBookItem;
 import com.tradingbot.service.TradingServiceImpl;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -12,19 +10,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.socket.WebSocketMessage;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.math.RoundingMode;
 import java.util.List;
 
 @Service
-public class BalanceServiceImpl extends AbstractChannelService<BalanceResponse>  implements MessageProcessingI {
+public class BalanceServiceImpl implements MessageProcessingI {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BalanceServiceImpl.class);
 
     private final TradingServiceImpl tradingService;
 
+    private Long lastUpdated;
+
     public BalanceServiceImpl(TradingServiceImpl tradingService) {
         this.tradingService = tradingService;
+        lastUpdated = 0L;
     }
 
     @Override
@@ -32,22 +31,75 @@ public class BalanceServiceImpl extends AbstractChannelService<BalanceResponse> 
 
         Gson g = new Gson();
         try {
-            JSONObject jsonObject =null;
-            if (jsonResponse.getJSONObject("result").getJSONObject("data").getJSONObject("value").getJSONObject("payload").has("BTC")){
+            String type= jsonResponse.getJSONObject("result").getJSONObject("data").getJSONObject("value").getString("type");
+            JSONObject jsonObject;
+            if (type.equals("snapshot")){
                 jsonObject =jsonResponse.getJSONObject("result").getJSONObject("data").getJSONObject("value").getJSONObject("payload").getJSONObject("BTC");
             }else {
                 jsonObject =jsonResponse.getJSONObject("result").getJSONObject("data").getJSONObject("value").getJSONObject("payload");
             }
-
-            BigDecimal ordersMargin = toBigDecimal(jsonObject.getJSONObject("ordersMargin"));
-            BigDecimal wallet = toBigDecimal(jsonObject.getJSONObject("wallet"));
-            BigDecimal positionsMargin = toBigDecimal(jsonObject.getJSONObject("positionsMargin"));
-            BigDecimal unrealizedPnl = toBigDecimal(jsonObject.getJSONObject("unrealizedPnl"));
-            BigDecimal available = toBigDecimal(jsonObject.getJSONObject("available"));
-            String currency = jsonObject.getString("currency");
             Long updateTime = jsonObject.getJSONObject("updateTime").getLong("seconds");
-            BigDecimal borrowed = toBigDecimal(jsonObject.getJSONObject("borrowed"));
 
+            if (this.lastUpdated==0){
+//                String currency = jsonObject.getString("currency");
+                this.tradingService.setBalanceUpdateTime(updateTime);
+                BigDecimal ordersMargin = toBigDecimal(jsonObject.getJSONObject("ordersMargin"));
+                this.tradingService.setOrdersMargin(ordersMargin);
+                BigDecimal wallet = toBigDecimal(jsonObject.getJSONObject("wallet"));
+                this.tradingService.setWallet(wallet);
+                BigDecimal positionsMargin = toBigDecimal(jsonObject.getJSONObject("positionsMargin"));
+                this.tradingService.setPositionsMargin(positionsMargin);
+                //Unrealized profit and loss value components
+                BigDecimal unrealizedPnl = toBigDecimal(jsonObject.getJSONObject("unrealizedPnl"));
+                this.tradingService.setUnrealizedPnl(unrealizedPnl);
+                BigDecimal available = toBigDecimal(jsonObject.getJSONObject("available"));
+                this.tradingService.setAvailable(available);
+                BigDecimal borrowed = toBigDecimal(jsonObject.getJSONObject("borrowed"));
+                this.tradingService.setBorrowed(borrowed);
+
+                this.lastUpdated = updateTime;
+
+                LOGGER.info("Balance initialized with values: " );
+                LOGGER.info("Order Margin: " + ordersMargin + "  wallet: " + wallet + "  positionsMargin: " + positionsMargin + "  unrealizedPnl:" + unrealizedPnl+ "  available: " + available + "  borrowed: " + borrowed );
+                this.tradingService.setBalanceInitialized(true);
+            }else {
+                this.tradingService.setBalanceUpdateTime(updateTime);
+                BigDecimal ordersMargin = toBigDecimal(jsonObject.getJSONObject("ordersMargin"));
+                if (!ordersMargin.equals(this.tradingService.getOrdersMargin())){
+                    LOGGER.info("order margin from balance channel updated, old value: " + this.tradingService.getOrdersMargin() + " new value: " + ordersMargin);
+                    this.tradingService.setOrdersMargin(ordersMargin);
+                }
+
+                BigDecimal wallet = toBigDecimal(jsonObject.getJSONObject("wallet"));
+                if (!wallet.equals(this.tradingService.getWallet())){
+                    LOGGER.info("wallet from balance channel updated, old value: " + this.tradingService.getWallet() + " new value: " + wallet);
+                    this.tradingService.setWallet(wallet);
+                }
+
+                BigDecimal positionsMargin = toBigDecimal(jsonObject.getJSONObject("positionsMargin"));
+                if (!positionsMargin.equals(this.tradingService.getPositionsMargin())){
+                    LOGGER.info("positions margin from balance channel updated, old value: " + this.tradingService.getPositionsMargin() + " new value: " + positionsMargin);
+                    this.tradingService.setPositionsMargin(positionsMargin);
+                }
+
+                //Unrealized profit and loss value components
+                BigDecimal unrealizedPnl = toBigDecimal(jsonObject.getJSONObject("unrealizedPnl"));
+                if (!unrealizedPnl.equals(this.tradingService.getUnrealizedPnl())){
+//                    LOGGER.info("Unrealized profit and loss from balance channel updated, old value: " + this.tradingService.getUnrealizedPnl() + " new value: " + unrealizedPnl);
+                    this.tradingService.setUnrealizedPnl(unrealizedPnl);
+                }
+
+                BigDecimal available = toBigDecimal(jsonObject.getJSONObject("available"));
+                if (!available.equals(this.tradingService.getAvailable())){
+                    LOGGER.info("available from balance channel updated, old value: " + this.tradingService.getAvailable() + " new value: " + available);
+                    this.tradingService.setAvailable(available);
+                }
+                BigDecimal borrowed = toBigDecimal(jsonObject.getJSONObject("borrowed"));
+                if (!borrowed.equals(this.tradingService.getBorrowed())){
+                    LOGGER.info("borrowed from balance channel updated, old value: " + this.tradingService.getBorrowed() + " new value: " + borrowed);
+                    this.tradingService.setBorrowed(borrowed);
+                }
+            }
 
         } catch (JSONException e) {
             e.printStackTrace();

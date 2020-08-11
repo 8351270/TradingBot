@@ -8,7 +8,6 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketMessage;
 
 import java.util.ArrayList;
@@ -29,23 +28,25 @@ public class OrderBookServiceImpl implements MessageProcessingI {
     @Override
     public List<WebSocketMessage<String>> processMessage(JSONObject jsonResponse) {
 
-//        List<WebSocketMessage<String>> ret = new ArrayList<>();
-//        WebSocketMessage<String> orderBook = new TextMessage("{\"method\":2,\"params\":{\"channel\":\"orderbook\"},\"id\":1}");
-//        ret.add(orderBook);
-//        return ret;
-
         try {
             jsonResponse = jsonResponse.getJSONObject("result").getJSONObject("data").getJSONObject("value");
             if (jsonResponse.has("1")){
                 jsonResponse = jsonResponse.getJSONObject("1");
+
+                // the fist one is always a snapshot with old data so we ignore it
+                if (jsonResponse.getBoolean("isSnapshot")){
+                    return null;
+                }
                 int id = jsonResponse.getInt("instrumentId");
                 if (id != 1){
-                    LOGGER.error("wrong instrument Id:" +id );
+                    // check they don't change id and instrumentId
+                    LOGGER.error("wrong instrument Id: " +id );
                 }else{
                     List<OrderBookItem> asksList = this.buildBookOrderItem(jsonResponse.getJSONArray("asks"));
                     List<OrderBookItem> bidsList = this.buildBookOrderItem(jsonResponse.getJSONArray("bids"));
-                    if (!bidsList.isEmpty() && !asksList.isEmpty()){
-                        return this.tradingService.checkForConditions(asksList,bidsList);
+                    // we only start creating orders once the balance and orders information is received
+                    if (!bidsList.isEmpty() && !asksList.isEmpty() && this.tradingService.isReadyToTrade()){
+                        return this.tradingService.checkForConditionsAndCreateOrder(asksList,bidsList);
                     }
                 }
             }
@@ -71,12 +72,5 @@ public class OrderBookServiceImpl implements MessageProcessingI {
         }
         return itemsList;
     }
-
-    public List<WebSocketMessage<String>> unsubscribe(){
-        List<WebSocketMessage<String>> ret = new ArrayList<>();
-        WebSocketMessage<String> orderBook = new TextMessage("{\"method\":2,\"params\":{\"channel\":\"orderbook\"},\"id\":1}");
-        ret.add(orderBook);
-        return  ret;
-    };
 
 }

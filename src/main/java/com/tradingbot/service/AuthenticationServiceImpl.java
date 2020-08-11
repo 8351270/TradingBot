@@ -9,7 +9,6 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketMessage;
@@ -35,7 +34,7 @@ public class AuthenticationServiceImpl {
     public WebSocketMessage<String> authentication() {
 
         AuthenticationRequest auth = new AuthenticationRequest();
-        auth.setId(101);
+        auth.setId(100);
         auth.setMethod(9);
         auth.getParams().getData().setMethod("loginSessionByApiToken");
         auth.getParams().getData().getParams().setApiKey(this.environment.getProperty("api.id"));
