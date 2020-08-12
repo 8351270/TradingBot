@@ -40,10 +40,8 @@ public class BalanceServiceImpl implements MessageProcessingI {
             }
             Long updateTime = jsonObject.getJSONObject("updateTime").getLong("seconds");
 
+            BigDecimal ordersMargin = toBigDecimal(jsonObject.getJSONObject("ordersMargin"));
             if (this.lastUpdated==0){
-//                String currency = jsonObject.getString("currency");
-                this.tradingService.setBalanceUpdateTime(updateTime);
-                BigDecimal ordersMargin = toBigDecimal(jsonObject.getJSONObject("ordersMargin"));
                 this.tradingService.setOrdersMargin(ordersMargin);
                 BigDecimal wallet = toBigDecimal(jsonObject.getJSONObject("wallet"));
                 this.tradingService.setWallet(wallet);
@@ -63,8 +61,6 @@ public class BalanceServiceImpl implements MessageProcessingI {
                 LOGGER.info("Order Margin: " + ordersMargin + "  wallet: " + wallet + "  positionsMargin: " + positionsMargin + "  unrealizedPnl:" + unrealizedPnl+ "  available: " + available + "  borrowed: " + borrowed );
                 this.tradingService.setBalanceInitialized(true);
             }else {
-                this.tradingService.setBalanceUpdateTime(updateTime);
-                BigDecimal ordersMargin = toBigDecimal(jsonObject.getJSONObject("ordersMargin"));
                 if (!ordersMargin.equals(this.tradingService.getOrdersMargin())){
                     LOGGER.info("order margin from balance channel updated, old value: " + this.tradingService.getOrdersMargin() + " new value: " + ordersMargin);
                     this.tradingService.setOrdersMargin(ordersMargin);
@@ -85,7 +81,7 @@ public class BalanceServiceImpl implements MessageProcessingI {
                 //Unrealized profit and loss value components
                 BigDecimal unrealizedPnl = toBigDecimal(jsonObject.getJSONObject("unrealizedPnl"));
                 if (!unrealizedPnl.equals(this.tradingService.getUnrealizedPnl())){
-//                    LOGGER.info("Unrealized profit and loss from balance channel updated, old value: " + this.tradingService.getUnrealizedPnl() + " new value: " + unrealizedPnl);
+                    LOGGER.debug("Unrealized profit and loss from balance channel updated, old value: " + this.tradingService.getUnrealizedPnl() + " new value: " + unrealizedPnl);
                     this.tradingService.setUnrealizedPnl(unrealizedPnl);
                 }
 

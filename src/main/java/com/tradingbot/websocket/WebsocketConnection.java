@@ -8,6 +8,8 @@ import org.springframework.web.socket.*;
 import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 
+import javax.annotation.PreDestroy;
+import java.io.IOException;
 import java.net.URI;
 
 @Component
@@ -15,15 +17,21 @@ public class WebsocketConnection {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WebsocketConnection.class);
 
-    final
-    WebSocketHandler sessionHandler;
+    WebSocketSession session;
 
-    final
-    Environment environment;
+    final WebSocketHandler sessionHandler;
+    final Environment environment;
 
     public WebsocketConnection(WebSocketHandler sessionHandler, Environment env) {
         this.sessionHandler = sessionHandler;
         this.environment = env;
+    }
+
+    // when system is shutting down we first cancel all open orders
+    @PreDestroy
+    public void destroy() throws IOException {
+        LOGGER.info("Trading bot shutting down, will first cancel all open orders");
+        this.sessionHandler.onShutDown(this.session);
     }
 
     public WebSocketSession connect() {
@@ -33,16 +41,18 @@ public class WebsocketConnection {
             String headerOrigin = this.environment.getProperty("api.origin");
             String url = this.environment.getProperty("api.url");
             assert url != null;
-            URI uri =URI.create(url);
+            URI uri = URI.create(url);
             handshakeHeaders.setOrigin(headerOrigin);
-            handshakeHeaders.set("User-Agent", "Node.JS MM Bot Example");
-//          Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36
-            return webSocketClient.doHandshake(
+            handshakeHeaders.set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36");
+            LOGGER.debug("will try to connect to websocket...");
+            session = webSocketClient.doHandshake(
                     sessionHandler, handshakeHeaders, uri).get();
+            return session;
 
         } catch (Exception e) {
             LOGGER.error("Exception while accessing websocket", e);
         }
         return null;
     }
+
 }

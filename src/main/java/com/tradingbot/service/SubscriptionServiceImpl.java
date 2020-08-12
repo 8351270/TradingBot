@@ -18,12 +18,12 @@ public class SubscriptionServiceImpl {
 
     private final List<Channel> privateChannels;
 
+    //TODO keep all the active subscriptions
     public SubscriptionServiceImpl() {
         this.publicChannels = new ArrayList<>();
         this.privateChannels = new ArrayList<>();
     }
 
-    //TODO keep all the active subscriptions
     private static final Logger LOGGER = LoggerFactory.getLogger(SubscriptionServiceImpl.class);
 
     public List<WebSocketMessage<String>> getPrivateSubscriptions() {

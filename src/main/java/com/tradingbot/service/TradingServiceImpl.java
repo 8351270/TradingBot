@@ -42,7 +42,7 @@ public class TradingServiceImpl {
     // active sell order
     private OpenOrder sellOrder = null;
 
-    private Long balanceUpdateTime;
+//    private Long balanceUpdateTime;
     //set true once we receive balance information for first time
     private boolean balanceInitialized;
     //set true once we receive orders information for fist time
@@ -74,11 +74,11 @@ public class TradingServiceImpl {
         List<WebSocketMessage<String>> ret = new ArrayList<>();
         if (bestAsk.compareTo(myBuyPrice) < 0) {
             LOGGER.debug("should buy at: " + bestAsk);
-            if (this.buyOrder == null) {
-                ret.add(this.createBuyOrder(myBuyPrice,quoteSize)) ;
-            }else{
-                ret.add(this.updateBuyOrder(myBuyPrice,quoteSize)) ;
-            }
+//            if (this.buyOrder == null) {
+//                ret.add(this.createBuyOrder(myBuyPrice,quoteSize)) ;
+//            }else{
+//                ret.add(this.updateBuyOrder(myBuyPrice,quoteSize)) ;
+//            }
 
         } else {
             LOGGER.debug("no buy order created for best buy price at: " + bestBid + "   and order price at: " + myBuyPrice);
@@ -94,7 +94,6 @@ public class TradingServiceImpl {
         } else {
             LOGGER.debug("no sell order created for best sell price at: " + bestAsk + "   and order price at: " + mySellPrice);
         }
-
         return ret;
     }
 
@@ -324,15 +323,6 @@ public class TradingServiceImpl {
         }
     }
 
-    public Long getBalanceUpdateTime() {
-        return balanceUpdateTime;
-    }
-
-    public void setBalanceUpdateTime(Long balanceUpdateTime) {
-        this.balanceUpdateTime = balanceUpdateTime;
-
-    }
-
     public boolean isOrderFillInitialized() {
         return orderFillInitialized;
 
@@ -354,4 +344,11 @@ public class TradingServiceImpl {
         return readyToTrade;
     }
 
+    public int getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(int orderId) {
+        this.orderId = orderId;
+    }
 }

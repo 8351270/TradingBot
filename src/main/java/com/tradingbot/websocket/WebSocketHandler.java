@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import javax.annotation.PreDestroy;
+import java.io.IOException;
 import java.util.List;
 
 @Component
@@ -15,11 +17,13 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketHandler.class);
 
-    private boolean connectionClosed = false;
-
+    // channels subscription service
     final SubscriptionServiceImpl subscriptionService;
-    final MessageResolverServiceImpl messageResolverService;
+    // authentication service
     final AuthenticationServiceImpl authenticationService;
+    // resolve messages for all channels except from the previous ones
+    final MessageResolverServiceImpl messageResolverService;
+
 
     public WebSocketHandler(MessageResolverServiceImpl messageResolverService, AuthenticationServiceImpl authenticationService, SubscriptionServiceImpl subscriptionService) {
         this.messageResolverService = messageResolverService;
@@ -27,31 +31,32 @@ public class WebSocketHandler extends TextWebSocketHandler {
         this.subscriptionService = subscriptionService;
     }
 
+    public void onShutDown(WebSocketSession session) throws IOException {
+        this.messageResolverService.cancelAllOrders(session);
+    }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
 
-        LOGGER.info("Connection established with server" );
+        LOGGER.info("Connection established with server");
         WebSocketMessage<String> auth = this.authenticationService.authentication();
         List<WebSocketMessage<String>> subs = subscriptionService.getPublicSubscriptions();
-        for (WebSocketMessage<String> m: subs) {
+        for (WebSocketMessage<String> m : subs) {
             session.sendMessage(m);
         }
-
         session.sendMessage(auth);
-
     }
 
     @Override
     public void handleMessage(WebSocketSession session, WebSocketMessage<?> message) throws Exception {
 
         if (message instanceof TextMessage) {
-            this.handleTextMessage(session, (TextMessage)message);
+            this.handleTextMessage(session, (TextMessage) message);
         } else if (message instanceof PongMessage) {
-            this.handlePongMessage(session, (PongMessage)message);
+            this.handlePongMessage(session, (PongMessage) message);
         } else {
-                throw new IllegalStateException("Unexpected message type: " + message);
-            }
+            throw new IllegalStateException("Unexpected message type: " + message);
+        }
     }
 
     @Override
@@ -60,8 +65,8 @@ public class WebSocketHandler extends TextWebSocketHandler {
         LOGGER.debug("message received: " + message.getPayload());
         JSONObject jsonResponse = new JSONObject(message.getPayload());
         List<WebSocketMessage<String>> messages = this.messageResolverService.processMessage(jsonResponse);
-        if (messages != null && !messages.isEmpty()){
-            for (WebSocketMessage<String> m : messages){
+        if (messages != null && !messages.isEmpty()) {
+            for (WebSocketMessage<String> m : messages) {
                 session.sendMessage(m);
             }
         }
@@ -79,15 +84,6 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        LOGGER.error("connection closed unexpectedly");
-        this.connectionClosed = true;
-    }
-
-    public boolean isConnectionClosed() {
-        return connectionClosed;
-    }
-
-    public void setConnectionClosed(boolean connectionClosed) {
-        this.connectionClosed = connectionClosed;
+        LOGGER.error("connection closed");
     }
 }

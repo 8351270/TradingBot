@@ -46,7 +46,7 @@ public class OrderBookServiceImpl implements MessageProcessingI {
                     List<OrderBookItem> bidsList = this.buildBookOrderItem(jsonResponse.getJSONArray("bids"));
                     // we only start creating orders once the balance and orders information is received
                     if (!bidsList.isEmpty() && !asksList.isEmpty() && this.tradingService.isReadyToTrade()){
-                        return this.tradingService.checkForConditionsAndCreateOrder(asksList,bidsList);
+//                        return this.tradingService.checkForConditionsAndCreateOrder(asksList,bidsList);
                     }
                 }
             }
