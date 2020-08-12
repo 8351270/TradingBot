@@ -18,7 +18,6 @@ public class SubscriptionServiceImpl {
 
     private final List<Channel> privateChannels;
 
-    //TODO keep all the active subscriptions
     public SubscriptionServiceImpl() {
         this.publicChannels = new ArrayList<>();
         this.privateChannels = new ArrayList<>();
@@ -29,7 +28,7 @@ public class SubscriptionServiceImpl {
     public List<WebSocketMessage<String>> getPrivateSubscriptions() {
 
         List<WebSocketMessage<String>> ret = new ArrayList<>();
-        Channel ch = null;
+        Channel ch;
         ch = new Channel(6,"orders");
         privateChannels.add(ch);
         ch = new Channel(7,"orderFills");
@@ -52,7 +51,6 @@ public class SubscriptionServiceImpl {
     public List<WebSocketMessage<String>> getPublicSubscriptions() {
 
         List<WebSocketMessage<String>> ret = new ArrayList<>();
-
         Channel ch = new Channel(1,"orderbook");
         publicChannels.add(ch);
 //        ch = new Channel(2,"lasttrades");
@@ -72,22 +70,6 @@ public class SubscriptionServiceImpl {
         return ret;
     }
 
-    public List<WebSocketMessage<String>> unsubscribe(int id){
-        Optional<Channel> ch = publicChannels.stream().filter(x -> x.getId()==id).findFirst();
-        if (ch.isEmpty()){
-            ch = privateChannels.stream().filter(x -> x.getId()==id).findFirst();
-            if (ch.isEmpty()){
-                LOGGER.error("Error confirming subscriptions");
-                return null;
-            }
-        }
-        ch.get().setSubscribed(false);
-        WebSocketMessage<String> subsMessage = new TextMessage(ch.get().toSubscribeString());
-        LOGGER.info("Unsubscribing from channel: "+ ch.get().getName());
-        List<WebSocketMessage<String>> ret = new ArrayList<>();
-        ret.add(subsMessage);
-        return ret;
-    }
     public void confirmSubscription(int id){
 
         Optional<Channel> ch = publicChannels.stream().filter(x -> x.getId()==id).findFirst();
@@ -101,5 +83,23 @@ public class SubscriptionServiceImpl {
         ch.get().setSubscribed(true);
         LOGGER.info("Successfully subscribed to channel: " + ch.get().getName());
     }
+
+//    public List<WebSocketMessage<String>> unsubscribe(int id){
+//        Optional<Channel> ch = publicChannels.stream().filter(x -> x.getId()==id).findFirst();
+//        if (ch.isEmpty()){
+//            ch = privateChannels.stream().filter(x -> x.getId()==id).findFirst();
+//            if (ch.isEmpty()){
+//                LOGGER.error("Error confirming subscriptions");
+//                return null;
+//            }
+//        }
+//        ch.get().setSubscribed(false);
+//        WebSocketMessage<String> subsMessage = new TextMessage(ch.get().toSubscribeString());
+//        LOGGER.info("Unsubscribing from channel: "+ ch.get().getName());
+//        List<WebSocketMessage<String>> ret = new ArrayList<>();
+//        ret.add(subsMessage);
+//        return ret;
+//    }
+//
 
 }
