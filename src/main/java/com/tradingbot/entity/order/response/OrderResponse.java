@@ -3,6 +3,9 @@ package com.tradingbot.entity.order.response;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.tradingbot.entity.order.response.inner.CreationTime;
+import com.tradingbot.entity.order.response.inner.Price;
+import com.tradingbot.entity.order.response.inner.UpdateTime;
 
 public class OrderResponse {
 
@@ -228,10 +231,10 @@ public class OrderResponse {
                 ", side='" + side + '\'' +
                 ", initialSize=" + initialSize +
                 ", remainingSize=" + remainingSize +
-                ", price=" + price +
+                ", price=" + price.toString() +
                 ", status='" + status + '\'' +
-                ", updateTime=" + updateTime +
-                ", creationTime=" + creationTime +
+                ", updateTime=" + updateTime.toString() +
+                ", creationTime=" + creationTime.toString() +
                 ", instrument=" + instrument +
                 '}';
     }

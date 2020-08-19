@@ -1,5 +1,5 @@
 
-package com.tradingbot.entity.order.request.cancelorder;
+package com.tradingbot.entity.order.request.cancelorder.inner;
 
 import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonInclude;

@@ -1,40 +1,31 @@
 
 package com.tradingbot.entity.positions.inner;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-public class EntryNotionalValue {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({
+    "mantissa",
+    "exponent"
+})
+public class EntryNotionalValue implements Serializable
+{
 
-    @SerializedName("mantissa")
-    @Expose
+    @JsonProperty("mantissa")
     private Long mantissa;
-    @SerializedName("exponent")
-    @Expose
+    @JsonProperty("exponent")
     private Long exponent;
+    private final static long serialVersionUID = -4955405239795487532L;
 
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public EntryNotionalValue() {
-    }
-
-    /**
-     * 
-     * @param mantissa
-     * @param exponent
-     */
-    public EntryNotionalValue(Long mantissa, Long exponent) {
-        super();
-        this.mantissa = mantissa;
-        this.exponent = exponent;
-    }
-
+    @JsonProperty("mantissa")
     public Long getMantissa() {
         return mantissa;
     }
 
+    @JsonProperty("mantissa")
     public void setMantissa(Long mantissa) {
         this.mantissa = mantissa;
     }
@@ -44,10 +35,12 @@ public class EntryNotionalValue {
         return this;
     }
 
+    @JsonProperty("exponent")
     public Long getExponent() {
         return exponent;
     }
 
+    @JsonProperty("exponent")
     public void setExponent(Long exponent) {
         this.exponent = exponent;
     }
@@ -57,4 +50,11 @@ public class EntryNotionalValue {
         return this;
     }
 
+    @Override
+    public String toString() {
+        return "EntryNotionalValue{" +
+                "mantissa=" + mantissa +
+                ", exponent=" + exponent +
+                '}';
+    }
 }

@@ -13,7 +13,6 @@ import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -55,23 +54,6 @@ public class MessageResolverServiceImpl implements MessageProcessingI {
         this.positionsService = positionsService;
     }
 
-    // to be call when app is shutting down to cancel all open orders
-    public void cancelAllOrders(WebSocketSession session) throws IOException {
-        if (this.tradingService.getSellOrder() != null) {
-            if (this.tradingService.getSellOrder().getExchangeOrderId() != null) {
-                session.sendMessage(CreateCancelOrder(this.tradingService.getSellOrder().getExchangeOrderId()));
-                LOGGER.info("cancelling open sell order");
-            }
-        }
-        if (this.tradingService.getBuyOrder() != null) {
-            if (this.tradingService.getBuyOrder().getExchangeOrderId() != null) {
-                session.sendMessage(CreateCancelOrder(this.tradingService.getBuyOrder().getExchangeOrderId()));
-                LOGGER.info("cancelling open buy order");
-            }
-        }
-        LOGGER.info("open orders were cancelled");
-    }
-
     private WebSocketMessage<String> CreateCancelOrder(Long exchangeOrderId) {
         CancelOrder cancelOrder = new CancelOrder();
         Gson gson = new Gson();
@@ -103,6 +85,7 @@ public class MessageResolverServiceImpl implements MessageProcessingI {
                     String tag = jsonResponse.getJSONObject("result").getString("tag");
                     if (tag.equals("err")) {
                         LOGGER.error("Error message received:" + jsonResponse.toString());
+                        return this.tradingService.processErrorMessage(jsonResponse);
                     }
                     if (tag.equals("ok")) {
 
@@ -116,43 +99,69 @@ public class MessageResolverServiceImpl implements MessageProcessingI {
                             this.tradingService.setOrderConfirm(jsonResponse);
                         }
                     }
+
                 } else {
-//                    if (jsonResponse.has("id") && jsonResponse.getInt("id") == 100) {
-//                        LOGGER.info(jsonResponse.toString());
-//                    } else {
-                        String channel = jsonResponse.getJSONObject("result").getString("channel");
-                        LOGGER.debug("message received from channel: " + channel);
-                        switch (channel) {
-                            case "orderbook":
-                                return this.orderBookService.processMessage(jsonResponse);
-                            case "lasttrades":
-                                return this.lastTradesService.processMessage(jsonResponse);
-                            case "tickers":
-                                return this.tickerService.processMessage(jsonResponse);
-                            case "candles":
-                                return this.candleService.processMessage(jsonResponse);
-                            case "instruments":
-                                return this.instrumentService.processMessage(jsonResponse);
-                            case "orders":
-                                return this.orderService.processMessage(jsonResponse);
-                            case "orderFills":
-                                return this.orderFillsService.processMessage(jsonResponse);
-                            case "balance":
-                                return this.balanceService.processMessage(jsonResponse);
-                            case "positions":
-                                return this.positionsService.processMessage(jsonResponse);
-                            case "riskSettings":
-                                return this.riskSettingsServiceImpl.processMessage(jsonResponse);
-
+                    if (!jsonResponse.getJSONObject("result").has("channel")) {
+                        if (jsonResponse.getJSONObject("result").has("result") && jsonResponse.getJSONObject("result").has("status")) {
+                            String status = jsonResponse.getJSONObject("result").getString("status");
+                            if (status.equals("result")) {
+                                this.tradingService.setOrderCanceled(jsonResponse.getInt("id"));
+                            }
+                        } else {
+                            LOGGER.error("unexpected message was not processed: " + jsonResponse.toString());
                         }
+                        return null;
                     }
+                    String channel = jsonResponse.getJSONObject("result").getString("channel");
+                    switch (channel) {
+                        case "orderbook":
+                            return this.orderBookService.processMessage(jsonResponse);
+                        case "lasttrades":
+                            return this.lastTradesService.processMessage(jsonResponse);
+                        case "tickers":
+                            return this.tickerService.processMessage(jsonResponse);
+                        case "candles":
+                            return this.candleService.processMessage(jsonResponse);
+                        case "instruments":
+                            return this.instrumentService.processMessage(jsonResponse);
+                        case "orders":
+                            return this.orderService.processMessage(jsonResponse);
+                        case "orderFills":
+                            return this.orderFillsService.processMessage(jsonResponse);
+                        case "balance":
+                            return this.balanceService.processMessage(jsonResponse);
+                        case "positions":
+                            return this.positionsService.processMessage(jsonResponse);
+                        case "riskSettings":
+                            return this.riskSettingsServiceImpl.processMessage(jsonResponse);
 
-//                }
-
+                    }
+                }
             }
         } catch (JSONException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    // to be call when app is shutting down to cancel all open orders
+    public void cancelAllOrders(WebSocketSession session) throws IOException, InterruptedException {
+        this.tradingService.setReadyToTrade(false);
+        //stop trading and give it two seconds to receive any pending order response
+//        Thread.sleep(1000);
+        if (this.tradingService.getSellOrder() != null) {
+            session.sendMessage(CreateCancelOrder(this.tradingService.getSellOrder().getExchangeOrderId()));
+            LOGGER.info("cancelling open sell order");
+                this.tradingService.setSellOrder(null);
+        } else {
+            LOGGER.info("No sell order to cancel");
+        }
+        if (this.tradingService.getBuyOrder() != null) {
+            session.sendMessage(CreateCancelOrder(this.tradingService.getBuyOrder().getExchangeOrderId()));
+            LOGGER.info("cancelling open buy order");
+                this.tradingService.setBuyOrder(null);
+        } else {
+            LOGGER.info("No buy order to cancel");
+        }
     }
 }

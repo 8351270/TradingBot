@@ -27,6 +27,9 @@ public class Payload {
      * 
      */
     public Payload() {
+        this.leverage = new Leverage();
+        this.riskLimit = new RiskLimit();
+        this.updateTime = new UpdateTime();
     }
 
     /**

@@ -1,5 +1,5 @@
 
-package com.tradingbot.entity.order.request.neworder;
+package com.tradingbot.entity.order.request.updateorder.inner;
 
 import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -69,11 +69,4 @@ public class Data implements Serializable
         return this;
     }
 
-    @Override
-    public String toString() {
-        return "Data{" +
-                "method='" + method + '\'' +
-                ", params=" + params.toString() +
-                '}';
-    }
 }

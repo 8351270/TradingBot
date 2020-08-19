@@ -1,58 +1,76 @@
 
 package com.tradingbot.entity.positions.inner;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-public class Payload {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({
+    "accountId",
+    "instrumentId",
+    "size",
+    "unrealizedPnl",
+    "realizedPnl",
+    "margin",
+    "maxRemovableMargin",
+    "entryPrice",
+    "entryNotionalValue",
+    "currentNotionalValue",
+    "partialLiquidationPrice",
+    "fullLiquidationPrice",
+    "updateTime"
+})
+public class Payload implements Serializable
+{
 
-    @SerializedName("accountId")
-    @Expose
+    @JsonProperty("accountId")
     private Long accountId;
-    @SerializedName("instrumentId")
-    @Expose
+    @JsonProperty("instrumentId")
     private Long instrumentId;
-    @SerializedName("size")
-    @Expose
-    private Long size;
-    @SerializedName("unrealizedPnl")
-    @Expose
+    @JsonProperty("size")
+    private Integer size;
+    @JsonProperty("unrealizedPnl")
     private UnrealizedPnl unrealizedPnl;
-    @SerializedName("realizedPnl")
-    @Expose
+    @JsonProperty("realizedPnl")
     private RealizedPnl realizedPnl;
-    @SerializedName("margin")
-    @Expose
+    @JsonProperty("margin")
     private Margin margin;
-    @SerializedName("maxRemovableMargin")
-    @Expose
+    @JsonProperty("maxRemovableMargin")
     private MaxRemovableMargin maxRemovableMargin;
-    @SerializedName("entryPrice")
-    @Expose
+    @JsonProperty("entryPrice")
     private EntryPrice entryPrice;
-    @SerializedName("entryNotionalValue")
-    @Expose
+    @JsonProperty("entryNotionalValue")
     private EntryNotionalValue entryNotionalValue;
-    @SerializedName("currentNotionalValue")
-    @Expose
+    @JsonProperty("currentNotionalValue")
     private CurrentNotionalValue currentNotionalValue;
-    @SerializedName("partialLiquidationPrice")
-    @Expose
-    private Object partialLiquidationPrice;
-    @SerializedName("fullLiquidationPrice")
-    @Expose
-    private Object fullLiquidationPrice;
-    @SerializedName("updateTime")
-    @Expose
+    @JsonProperty("partialLiquidationPrice")
+    private PartialLiquidationPrice partialLiquidationPrice;
+    @JsonProperty("fullLiquidationPrice")
+    private FullLiquidationPrice fullLiquidationPrice;
+    @JsonProperty("updateTime")
     private UpdateTime updateTime;
+    private final static long serialVersionUID = 7774239582037562135L;
 
     /**
      * No args constructor for use in serialization
-     * 
+     *
      */
-    public Payload() {
-    }
+//    public Payload() {
+//    }
 
+
+    public Payload() {
+        unrealizedPnl =  new UnrealizedPnl();
+        realizedPnl =  new RealizedPnl();
+        margin =  new Margin();
+        maxRemovableMargin = new MaxRemovableMargin();
+        entryPrice = new EntryPrice();
+        entryNotionalValue = new EntryNotionalValue();
+        currentNotionalValue = new CurrentNotionalValue();
+        updateTime = new UpdateTime();
+    }
     /**
      * 
      * @param entryNotionalValue
@@ -69,7 +87,7 @@ public class Payload {
      * @param unrealizedPnl
      * @param realizedPnl
      */
-    public Payload(Long accountId, Long instrumentId, Long size, UnrealizedPnl unrealizedPnl, RealizedPnl realizedPnl, Margin margin, MaxRemovableMargin maxRemovableMargin, EntryPrice entryPrice, EntryNotionalValue entryNotionalValue, CurrentNotionalValue currentNotionalValue, Object partialLiquidationPrice, Object fullLiquidationPrice, UpdateTime updateTime) {
+    public Payload(Long accountId, Long instrumentId, Integer size, UnrealizedPnl unrealizedPnl, RealizedPnl realizedPnl, Margin margin, MaxRemovableMargin maxRemovableMargin, EntryPrice entryPrice, EntryNotionalValue entryNotionalValue, CurrentNotionalValue currentNotionalValue, PartialLiquidationPrice partialLiquidationPrice, FullLiquidationPrice fullLiquidationPrice, UpdateTime updateTime) {
         super();
         this.accountId = accountId;
         this.instrumentId = instrumentId;
@@ -86,10 +104,12 @@ public class Payload {
         this.updateTime = updateTime;
     }
 
+    @JsonProperty("accountId")
     public Long getAccountId() {
         return accountId;
     }
 
+    @JsonProperty("accountId")
     public void setAccountId(Long accountId) {
         this.accountId = accountId;
     }
@@ -99,10 +119,12 @@ public class Payload {
         return this;
     }
 
+    @JsonProperty("instrumentId")
     public Long getInstrumentId() {
         return instrumentId;
     }
 
+    @JsonProperty("instrumentId")
     public void setInstrumentId(Long instrumentId) {
         this.instrumentId = instrumentId;
     }
@@ -112,23 +134,27 @@ public class Payload {
         return this;
     }
 
-    public Long getSize() {
+    @JsonProperty("size")
+    public Integer getSize() {
         return size;
     }
 
-    public void setSize(Long size) {
+    @JsonProperty("size")
+    public void setSize(Integer size) {
         this.size = size;
     }
 
-    public Payload withSize(Long size) {
+    public Payload withSize(Integer size) {
         this.size = size;
         return this;
     }
 
+    @JsonProperty("unrealizedPnl")
     public UnrealizedPnl getUnrealizedPnl() {
         return unrealizedPnl;
     }
 
+    @JsonProperty("unrealizedPnl")
     public void setUnrealizedPnl(UnrealizedPnl unrealizedPnl) {
         this.unrealizedPnl = unrealizedPnl;
     }
@@ -138,10 +164,12 @@ public class Payload {
         return this;
     }
 
+    @JsonProperty("realizedPnl")
     public RealizedPnl getRealizedPnl() {
         return realizedPnl;
     }
 
+    @JsonProperty("realizedPnl")
     public void setRealizedPnl(RealizedPnl realizedPnl) {
         this.realizedPnl = realizedPnl;
     }
@@ -151,10 +179,12 @@ public class Payload {
         return this;
     }
 
+    @JsonProperty("margin")
     public Margin getMargin() {
         return margin;
     }
 
+    @JsonProperty("margin")
     public void setMargin(Margin margin) {
         this.margin = margin;
     }
@@ -164,10 +194,12 @@ public class Payload {
         return this;
     }
 
+    @JsonProperty("maxRemovableMargin")
     public MaxRemovableMargin getMaxRemovableMargin() {
         return maxRemovableMargin;
     }
 
+    @JsonProperty("maxRemovableMargin")
     public void setMaxRemovableMargin(MaxRemovableMargin maxRemovableMargin) {
         this.maxRemovableMargin = maxRemovableMargin;
     }
@@ -177,10 +209,12 @@ public class Payload {
         return this;
     }
 
+    @JsonProperty("entryPrice")
     public EntryPrice getEntryPrice() {
         return entryPrice;
     }
 
+    @JsonProperty("entryPrice")
     public void setEntryPrice(EntryPrice entryPrice) {
         this.entryPrice = entryPrice;
     }
@@ -190,10 +224,12 @@ public class Payload {
         return this;
     }
 
+    @JsonProperty("entryNotionalValue")
     public EntryNotionalValue getEntryNotionalValue() {
         return entryNotionalValue;
     }
 
+    @JsonProperty("entryNotionalValue")
     public void setEntryNotionalValue(EntryNotionalValue entryNotionalValue) {
         this.entryNotionalValue = entryNotionalValue;
     }
@@ -203,10 +239,12 @@ public class Payload {
         return this;
     }
 
+    @JsonProperty("currentNotionalValue")
     public CurrentNotionalValue getCurrentNotionalValue() {
         return currentNotionalValue;
     }
 
+    @JsonProperty("currentNotionalValue")
     public void setCurrentNotionalValue(CurrentNotionalValue currentNotionalValue) {
         this.currentNotionalValue = currentNotionalValue;
     }
@@ -216,36 +254,42 @@ public class Payload {
         return this;
     }
 
-    public Object getPartialLiquidationPrice() {
+    @JsonProperty("partialLiquidationPrice")
+    public PartialLiquidationPrice getPartialLiquidationPrice() {
         return partialLiquidationPrice;
     }
 
-    public void setPartialLiquidationPrice(Object partialLiquidationPrice) {
+    @JsonProperty("partialLiquidationPrice")
+    public void setPartialLiquidationPrice(PartialLiquidationPrice partialLiquidationPrice) {
         this.partialLiquidationPrice = partialLiquidationPrice;
     }
 
-    public Payload withPartialLiquidationPrice(Object partialLiquidationPrice) {
+    public Payload withPartialLiquidationPrice(PartialLiquidationPrice partialLiquidationPrice) {
         this.partialLiquidationPrice = partialLiquidationPrice;
         return this;
     }
 
-    public Object getFullLiquidationPrice() {
+    @JsonProperty("fullLiquidationPrice")
+    public FullLiquidationPrice getFullLiquidationPrice() {
         return fullLiquidationPrice;
     }
 
-    public void setFullLiquidationPrice(Object fullLiquidationPrice) {
+    @JsonProperty("fullLiquidationPrice")
+    public void setFullLiquidationPrice(FullLiquidationPrice fullLiquidationPrice) {
         this.fullLiquidationPrice = fullLiquidationPrice;
     }
 
-    public Payload withFullLiquidationPrice(Object fullLiquidationPrice) {
+    public Payload withFullLiquidationPrice(FullLiquidationPrice fullLiquidationPrice) {
         this.fullLiquidationPrice = fullLiquidationPrice;
         return this;
     }
 
+    @JsonProperty("updateTime")
     public UpdateTime getUpdateTime() {
         return updateTime;
     }
 
+    @JsonProperty("updateTime")
     public void setUpdateTime(UpdateTime updateTime) {
         this.updateTime = updateTime;
     }

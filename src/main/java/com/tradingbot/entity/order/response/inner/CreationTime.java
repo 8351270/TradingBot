@@ -1,5 +1,5 @@
 
-package com.tradingbot.entity.order.response;
+package com.tradingbot.entity.order.response.inner;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -48,4 +48,11 @@ public class CreationTime {
         return this;
     }
 
+    @Override
+    public String toString() {
+        return "CreationTime{" +
+                "seconds=" + seconds +
+                ", nanos=" + nanos +
+                '}';
+    }
 }

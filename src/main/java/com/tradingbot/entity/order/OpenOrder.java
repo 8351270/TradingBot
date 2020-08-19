@@ -1,5 +1,7 @@
 package com.tradingbot.entity.order;
 
+import com.tradingbot.entity.order.response.OrderResponse;
+
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -11,8 +13,9 @@ public class OpenOrder {
     private Integer remainingSize;
     private Long updateTime;
     private BigDecimal price;
-    // set true once there is a confirmation from order fills channel
-    private boolean orderFilled;
+
+    // false when created and true once we have the OK response from de server
+    private boolean isConfirmed;
 
     public OpenOrder(Integer orderId, Integer size, BigDecimal price){
         this.internalOrderId = orderId;
@@ -20,12 +23,22 @@ public class OpenOrder {
         this.remainingSize = size;
         this.price = price;
         this.updateTime = new Date().getTime()/1000;
+        this.isConfirmed = false;
     }
 
     public OpenOrder() {
 
     }
 
+    public OpenOrder(OrderResponse order, int orderId) {
+        this.setUpdateTime(order.getUpdateTime().getSeconds());
+        this.setExchangeOrderId(order.getId());
+        this.setInternalOrderId(orderId);
+        this.setRemainingSize(order.getRemainingSize());
+        this.setTotalSize((order.getInitialSize()));
+        this.setPrice(toBigDecimal(order.getPrice().getMantissa(), order.getPrice().getExponent()));
+        this.setConfirmed(true);
+    }
 
     @Override
     public String toString() {
@@ -36,7 +49,7 @@ public class OpenOrder {
                 ", remainingSize=" + remainingSize +
                 ", updateTime=" + updateTime +
                 ", price=" + price +
-                ", is order confirmed from order fills channels ?: " + orderFilled +
+                ", is create/update request confirmed by exchange ?=" + isConfirmed +
                 '}';
     }
 
@@ -88,11 +101,25 @@ public class OpenOrder {
         this.price = price;
     }
 
-    public boolean isOrderFilled() {
-        return orderFilled;
+    public boolean isConfirmed() {
+        return isConfirmed;
     }
 
-    public void setOrderFilled(boolean orderFilled) {
-        this.orderFilled = orderFilled;
+    public void setConfirmed(boolean confirmed) {
+        isConfirmed = confirmed;
+    }
+
+    //  TODO make a util class with this
+    public static BigDecimal toBigDecimal(Long mantissa, Long exponent) {
+        BigDecimal ret = new BigDecimal(mantissa);
+        if (ret.compareTo(BigDecimal.valueOf(0)) == 0) {
+            return ret;
+        }
+        exponent = exponent * -1;
+        BigDecimal base = new BigDecimal(10);
+        base = base.pow(Math.toIntExact(exponent));
+        ret = ret.divide(base);
+        return ret;
+
     }
 }

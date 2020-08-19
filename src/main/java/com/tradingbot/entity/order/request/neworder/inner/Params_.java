@@ -1,5 +1,5 @@
 
-package com.tradingbot.entity.order.request.neworder;
+package com.tradingbot.entity.order.request.neworder.inner;
 
 import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -90,7 +90,7 @@ public class Params_ implements Serializable
     }
 
     @JsonProperty("size")
-    public Integer getSize() {
+    public Integer geze() {
         return size;
     }
 

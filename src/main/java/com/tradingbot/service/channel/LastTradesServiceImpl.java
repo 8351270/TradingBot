@@ -15,7 +15,7 @@ public class LastTradesServiceImpl implements MessageProcessingI {
     public List<WebSocketMessage<String>> processMessage(JSONObject jsonResponse) {
 
         Gson g = new Gson();
-        LastTradesResponse lastTradesResponse = g.fromJson(jsonResponse.toString(), LastTradesResponse.class);
+//        LastTradesResponse lastTradesResponse = g.fromJson(jsonResponse.toString(), LastTradesResponse.class);
         return null;
     }
 }

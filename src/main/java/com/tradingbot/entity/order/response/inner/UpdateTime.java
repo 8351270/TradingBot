@@ -1,5 +1,5 @@
 
-package com.tradingbot.entity.order.response;
+package com.tradingbot.entity.order.response.inner;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -57,4 +57,11 @@ public class UpdateTime {
         return this;
     }
 
+    @Override
+    public String toString() {
+        return "UpdateTime{" +
+                "seconds=" + seconds +
+                ", nanos=" + nanos +
+                '}';
+    }
 }

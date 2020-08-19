@@ -1,40 +1,31 @@
 
 package com.tradingbot.entity.positions.inner;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-public class MaxRemovableMargin {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({
+    "mantissa",
+    "exponent"
+})
+public class MaxRemovableMargin implements Serializable
+{
 
-    @SerializedName("mantissa")
-    @Expose
+    @JsonProperty("mantissa")
     private Long mantissa;
-    @SerializedName("exponent")
-    @Expose
+    @JsonProperty("exponent")
     private Long exponent;
+    private final static long serialVersionUID = 6179697691128581649L;
 
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public MaxRemovableMargin() {
-    }
-
-    /**
-     * 
-     * @param mantissa
-     * @param exponent
-     */
-    public MaxRemovableMargin(Long mantissa, Long exponent) {
-        super();
-        this.mantissa = mantissa;
-        this.exponent = exponent;
-    }
-
+    @JsonProperty("mantissa")
     public Long getMantissa() {
         return mantissa;
     }
 
+    @JsonProperty("mantissa")
     public void setMantissa(Long mantissa) {
         this.mantissa = mantissa;
     }
@@ -44,10 +35,12 @@ public class MaxRemovableMargin {
         return this;
     }
 
+    @JsonProperty("exponent")
     public Long getExponent() {
         return exponent;
     }
 
+    @JsonProperty("exponent")
     public void setExponent(Long exponent) {
         this.exponent = exponent;
     }
@@ -57,4 +50,11 @@ public class MaxRemovableMargin {
         return this;
     }
 
+    @Override
+    public String toString() {
+        return "MaxRemovableMargin{" +
+                "mantissa=" + mantissa +
+                ", exponent=" + exponent +
+                '}';
+    }
 }

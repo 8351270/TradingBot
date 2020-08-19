@@ -2,9 +2,11 @@ package com.tradingbot.service;
 
 import com.google.gson.Gson;
 import com.tradingbot.entity.order.OpenOrder;
+import com.tradingbot.entity.order.request.cancelorder.CancelOrder;
 import com.tradingbot.entity.order.request.neworder.PlaceNewOrder;
 import com.tradingbot.entity.order.request.updateorder.ReplaceOrder;
 import com.tradingbot.entity.order.response.OrderResponse;
+import com.tradingbot.entity.order.response.inner.Price;
 import com.tradingbot.entity.orderbook.OrderBookItem;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -35,6 +37,11 @@ public class TradingServiceImpl {
     private BigDecimal available;
     private BigDecimal borrowed;
 
+    //  updated from position
+    private Integer positionSize;
+    // updated from risk settings
+    private BigDecimal riskLimit;
+
     // id to save as internal and match with latter server response
     private int orderId = 100;
     // active buy order
@@ -42,19 +49,24 @@ public class TradingServiceImpl {
     // active sell order
     private OpenOrder sellOrder = null;
 
-//    private Long balanceUpdateTime;
     //set true once we receive balance information for first time
     private boolean balanceInitialized;
     //set true once we receive orders information for fist time
     private boolean orderInitialized;
     //set true once we receive orders fill information for fist time
     private boolean orderFillInitialized;
+    //set true once we receive positionInformation for first time
+    private boolean positionInitialized;
+    // set true once we receive risk configuration
+    private boolean riskSettingsInitialized;
 
     // will be true once (balanceInitialized && orderInitialized && orderFillInitialized) is true
     private boolean readyToTrade;
 
+
     public TradingServiceImpl(Environment env) {
         this.env = env;
+
     }
 
     public List<WebSocketMessage<String>> checkForConditionsAndCreateOrder(List<OrderBookItem> asks, List<OrderBookItem> bids) {
@@ -63,60 +75,113 @@ public class TradingServiceImpl {
         BigDecimal bestAsk = asks.stream().map(OrderBookItem::toBigDecimal).min(BigDecimal::compareTo).orElseThrow(NoSuchElementException::new);
 
         BigDecimal interest = new BigDecimal(Objects.requireNonNull(env.getProperty("interest")));
-        BigDecimal positionInitial = new BigDecimal(Objects.requireNonNull(env.getProperty("position.initial")));
-        BigDecimal positionMax = new BigDecimal(Objects.requireNonNull(env.getProperty("position.max")));
+//        Integer positionInitial = Integer.valueOf(Objects.requireNonNull(env.getProperty("position.initial")));
+        Integer positionMax = Integer.valueOf(Objects.requireNonNull(env.getProperty("position.max")));
         BigDecimal shift = new BigDecimal(Objects.requireNonNull(env.getProperty("shift")));
-        BigDecimal average = bestBid.add(bestAsk).divide(new BigDecimal(2), RoundingMode.FLOOR);
-        BigDecimal myBuyPrice = average.subtract(interest).add(shift.multiply(positionInitial));
-        BigDecimal mySellPrice = average.add(interest).add(shift.multiply(positionInitial));
         Integer quoteSize = Integer.valueOf(Objects.requireNonNull(env.getProperty("quote.size")));
+        BigDecimal average = bestBid.add(bestAsk).divide(new BigDecimal(2), RoundingMode.FLOOR);
+        //buy order at (current best purchase price + current best sale price) / 2 - interest - shift * position
+        BigDecimal myBuyPrice = average.subtract(interest).subtract(shift.multiply(BigDecimal.valueOf(this.positionSize)));
+        //a sell order at (current best purchase price + current best sale price) / 2 + interest - shift * position
+        BigDecimal mySellPrice = average.add(interest).subtract(shift.multiply(BigDecimal.valueOf(this.positionSize)));
 
         List<WebSocketMessage<String>> ret = new ArrayList<>();
-        if (bestAsk.compareTo(myBuyPrice) < 0) {
-            LOGGER.debug("should buy at: " + bestAsk);
-//            if (this.buyOrder == null) {
-//                ret.add(this.createBuyOrder(myBuyPrice,quoteSize)) ;
-//            }else{
-//                ret.add(this.updateBuyOrder(myBuyPrice,quoteSize)) ;
-//            }
 
-        } else {
-            LOGGER.debug("no buy order created for best buy price at: " + bestBid + "   and order price at: " + myBuyPrice);
+        // update the quote size value to
+        quoteSize = this.calculateQuoteSize(quoteSize, positionMax);
+        if (quoteSize > 0) {
+            quoteSize = this.checkBalance(quoteSize);
         }
-        if (bestBid.compareTo(mySellPrice) > 0) {
-            LOGGER.debug("should sell at: " + bestBid);
-            if (this.sellOrder == null){
-                ret.add(this.createSellOrder(mySellPrice,quoteSize));
-            }else {
-                ret.add(this.updateSellOrder(myBuyPrice,quoteSize)) ;
-            }
+        if (quoteSize == 0) {
+            return null;
 
-        } else {
-            LOGGER.debug("no sell order created for best sell price at: " + bestAsk + "   and order price at: " + mySellPrice);
+        }
+
+        if (this.buyOrder == null) {
+            ret.add(this.createBuyOrder(myBuyPrice, quoteSize));
+        } else if (this.buyOrder.getPrice().compareTo(myBuyPrice) != 0) {
+            if (this.buyOrder.getExchangeOrderId() != null && this.buyOrder.isConfirmed() && !this.buyOrder.getRemainingSize().equals(0)) {
+                ret.add(this.updateBuyOrder(myBuyPrice, quoteSize));
+            }
+        }
+
+        if (this.sellOrder == null) {
+            ret.add(this.createSellOrder(mySellPrice, quoteSize));
+        } else if (this.sellOrder.getPrice().compareTo(mySellPrice) != 0) {
+            if (this.sellOrder.getExchangeOrderId() != null && this.sellOrder.isConfirmed() && !this.sellOrder.getRemainingSize().equals(0)) {
+                ret.add(this.updateSellOrder(mySellPrice, quoteSize));
+            }
         }
         return ret;
+
+    }
+
+    //  next position has to respect the formula: maxposition >= position >= -maxposition
+    //  if not possible we shrink the position size to the max amount that will maintain the formula
+    private Integer calculateQuoteSize(Integer quoteSize, Integer positionMax) {
+
+        Integer futurePositionSIze = this.positionSize;
+        if (futurePositionSIze <= 0) {
+            futurePositionSIze += quoteSize;
+            if (positionMax <= futurePositionSIze) {
+                LOGGER.debug("quote size should be reduced to keep the position lower than max position: "
+                        + positionMax + " quote size will be: " + (futurePositionSIze - positionMax));
+                return (futurePositionSIze - positionMax);
+            } else {
+                return quoteSize;
+            }
+        } else {
+            futurePositionSIze -= quoteSize;
+            if (-positionMax >= futurePositionSIze) {
+                LOGGER.debug("quote size should be reduced to keep the position higher than -max position: -"
+                        + positionMax + " quote size will be: " + (futurePositionSIze - positionMax));
+                return ((futurePositionSIze + positionMax) * -1);
+            } else {
+                return quoteSize;
+            }
+        }
+    }
+
+    private Integer checkBalance(Integer size) {
+        // exchange won't allow you to replace an order if you don't have enough available balance for both orders at the same time
+        BigDecimal microBtc = this.available.multiply(BigDecimal.valueOf(1000000));
+        BigDecimal bg = microBtc.divide(BigDecimal.valueOf(2).multiply(BigDecimal.valueOf(size)));
+        if (bg.compareTo(BigDecimal.valueOf(size)) > 0) {
+            return size;
+        } else {
+            if (bg.intValue() > 0) {
+                LOGGER.debug("Not enough balance to keep the quote size, quote size will be: " + bg.intValue());
+            } else {
+                LOGGER.debug("Not enough balance to keep trading: ");
+            }
+            return bg.intValue();
+        }
     }
 
     private WebSocketMessage<String> updateSellOrder(BigDecimal price, Integer quoteSize) {
-        ReplaceOrder replaceOrder = updateOrder(price,quoteSize,this.sellOrder.getExchangeOrderId());
+        ReplaceOrder replaceOrder = updateOrder(price, quoteSize, this.sellOrder.getExchangeOrderId());
+        this.sellOrder.setInternalOrderId(this.orderId);
+        this.sellOrder.setConfirmed(false);
         Gson gson = new Gson();
         String jsonOrder = gson.toJson(replaceOrder);
         WebSocketMessage<String> message = new TextMessage(jsonOrder);
-        LOGGER.info("will update a sell order: " + message.getPayload());
+        LOGGER.debug("will update a sell order: " + message.getPayload());
         return message;
     }
 
     private WebSocketMessage<String> updateBuyOrder(BigDecimal price, Integer quoteSize) {
-        ReplaceOrder replaceOrder = updateOrder(price,quoteSize,this.buyOrder.getExchangeOrderId());
+        ReplaceOrder replaceOrder = updateOrder(price, quoteSize, this.buyOrder.getExchangeOrderId());
+        this.buyOrder.setInternalOrderId(this.orderId);
+        this.buyOrder.setConfirmed(false);
         Gson gson = new Gson();
         String jsonOrder = gson.toJson(replaceOrder);
         WebSocketMessage<String> message = new TextMessage(jsonOrder);
-        LOGGER.info("will update a buy order: " + message.getPayload());
+        LOGGER.debug("will update a buy order: " + message.getPayload());
         return message;
     }
 
-    private ReplaceOrder updateOrder(BigDecimal price, Integer quoteSize, Long exchangeId){
-        ReplaceOrder replaceOrder =  new ReplaceOrder();
+    private ReplaceOrder updateOrder(BigDecimal price, Integer quoteSize, Long exchangeId) {
+        ReplaceOrder replaceOrder = new ReplaceOrder();
         this.orderId++;
         replaceOrder.setId(this.orderId);
         replaceOrder.setMethod(9);
@@ -133,7 +198,7 @@ public class TradingServiceImpl {
         this.orderId++;
         PlaceNewOrder placeNewOrder = new PlaceNewOrder(9, this.orderId);
         placeNewOrder.getParams().getData().setMethod("placeOrder");
-        placeNewOrder.getParams().getData().getParams().setInstrument(1);
+        placeNewOrder.getParams().getData().getParams().setInstrument(Integer.parseInt(Objects.requireNonNull(env.getProperty("instrument.code"))));
         placeNewOrder.getParams().getData().getParams().getPrice().setExponent(0);
         placeNewOrder.getParams().getData().getParams().getPrice().setMantissa(buyPrice.intValue());
         placeNewOrder.getParams().getData().getParams().setSize(size);
@@ -149,8 +214,8 @@ public class TradingServiceImpl {
         Gson gson = new Gson();
         String jsonOrder = gson.toJson(placeNewOrder);
         WebSocketMessage<String> message = new TextMessage(jsonOrder);
-        sellOrder = new OpenOrder(this.orderId, size, sellPrice);
-        LOGGER.info("will create a sell order: " + message.getPayload());
+        this.sellOrder = new OpenOrder(this.orderId, size, sellPrice);
+        LOGGER.debug("will create a sell order: " + message.getPayload());
         return message;
     }
 
@@ -160,81 +225,266 @@ public class TradingServiceImpl {
         Gson gson = new Gson();
         String jsonOrder = gson.toJson(placeNewOrder);
         WebSocketMessage<String> message = new TextMessage(jsonOrder);
-        buyOrder = new OpenOrder(this.orderId, size, buyPrice);
-        LOGGER.info("will create a buy order: " + message.getPayload());
+        this.buyOrder = new OpenOrder(this.orderId, size, buyPrice);
+        LOGGER.debug("will create a buy order: " + message.getPayload());
         return message;
     }
 
-    // function to be called from Order Service when a order update arrives
+    // function to be called from Orders Service when a order update arrives
     public void updateOrderStatus(OrderResponse order) {
         switch (order.getStatus()) {
             case "CANCELLED":
+                // the order response should arrive first than this and remove the order after canceling it
                 if (order.getSide().equalsIgnoreCase("BUY")) {
-                    LOGGER.info("Buy order canceled, internal order is: " + this.buyOrder.toString());
-                    this.buyOrder = null;
+                    if (this.buyOrder.getExchangeOrderId().equals(order.getId())) {
+                        LOGGER.debug("Buy order canceled, internal order is: " + this.buyOrder.toString());
+//                        if (this.buyOrder.isConfirmed()){
+//                            this.buyOrder = null;
+//                        }else {
+//                            this.buyOrder.setRemainingSize(0);
+//                        }
+
+                    }
+                } else if (this.sellOrder.getExchangeOrderId().equals(order.getId())) {
+                    LOGGER.debug("Sell order canceled, internal order is: " + this.sellOrder.toString());
+//                    if (this.sellOrder.isConfirmed()){
+//                        this.sellOrder = null;
+//                    }else {
+//                        this.sellOrder.setRemainingSize(0);
+//                    }
+
                 } else {
-                    LOGGER.info("Sell order canceled, internal order is: " + this.sellOrder.toString());
-                    this.sellOrder = null;
+                    LOGGER.debug("Cancel order was not matched, this may happen after reconnect, id should match a previously canceled order, order is: " + order.toString());
                 }
-                LOGGER.info("Order response from server is: " + order.toString());
                 break;
             case "FILLED":
-                if (order.getSide().equalsIgnoreCase("BUY")) {
+                if (order.getSide().equalsIgnoreCase("BUY") && this.buyOrder.getExchangeOrderId().equals(order.getId())) {
                     LOGGER.info("Buy Order completely filled, internal order is: " + this.buyOrder.toString());
-                    this.buyOrder = null;
-                } else {
+                    if (this.buyOrder.isConfirmed()){
+                        this.buyOrder = null;
+                    }else {
+                        this.buyOrder.setRemainingSize(0);
+                    }
+
+                } else if (this.sellOrder.getExchangeOrderId().equals(order.getId())) {
                     LOGGER.info("Sell Order completely filled, internal order is: " + this.sellOrder.toString());
-                    this.sellOrder = null;
+                    if (this.sellOrder.isConfirmed()){
+                        this.sellOrder = null;
+                    }else {
+                        this.sellOrder.setRemainingSize(0);
+                    }
                 }
-                LOGGER.info("Order response from server is: " + order.toString());
+//                LOGGER.debug("Completely filled order was not matched, this may happen after reconnect, id should match a previously canceled order, order is: " + order.toString());
                 break;
             case "PARTIALLY_FILLED":
-                LOGGER.info("Order partially filled: " + order.toString());
                 if (order.getSide().equalsIgnoreCase("BUY")) {
                     this.buyOrder.setRemainingSize(order.getRemainingSize());
                     this.buyOrder.setUpdateTime(order.getUpdateTime().getSeconds());
+                    LOGGER.info("Buy Order partially filled, internal order is: " + this.buyOrder.toString());
                 } else {
                     this.sellOrder.setRemainingSize(order.getRemainingSize());
                     this.sellOrder.setUpdateTime(order.getUpdateTime().getSeconds());
+                    LOGGER.info("Sell Order partially filled, internal order is: " + this.sellOrder.toString());
+                }
+                LOGGER.info("Order partially filled: " + order.toString());
+                break;
+            case "NEW":
+                if (order.getSide().equalsIgnoreCase("BUY")) {
+                    LOGGER.debug("buy order exchange id updated, new value is:" + order.getId());
+                    this.buyOrder.setExchangeOrderId(order.getId());
+//                    this.buyOrder.setConfirmed(true);
+                } else {
+                    LOGGER.debug("sell order exchange id updated, new value is:" + order.getId());
+                    this.sellOrder.setExchangeOrderId(order.getId());
+//                    this.sellOrder.setConfirmed(true);
                 }
                 break;
         }
     }
 
-    // read the response from the server to an order creation (tag={ok,err})
+    // read the response from the server to an order creation or update (tag={ok,err})
     // if confirmed we save the internal id and update the update time
     public void setOrderConfirm(JSONObject jsonResponse) throws JSONException {
         Integer id = jsonResponse.getInt("id");
         String tag = jsonResponse.getJSONObject("result").getString("tag");
-        if (this.getSellOrder() != null) {
+        if (this.sellOrder != null) {
             if (this.sellOrder.getInternalOrderId().equals(id)) {
                 if (tag.equals("err")) {
                     String errCode = jsonResponse.getJSONObject("result").getJSONObject("value").getString("code");
                     LOGGER.error("sell order: " + this.sellOrder.toString());
                     LOGGER.error("was refused by the server with error code: " + errCode);
                     this.sellOrder = null;
+                    //tag=ok
                 } else {
-                    this.sellOrder.setExchangeOrderId(jsonResponse.getJSONObject("result").getLong("value"));
-                    this.sellOrder.setUpdateTime(new Date().getTime() / 1000);
-                    LOGGER.info("sell order: " + this.sellOrder.toString());
-                    LOGGER.info("was successfully created on server");
+                    if (jsonResponse.getJSONObject("result").getString("value").equals("ok")) {
+                        //this is the confirm of an update
+                        LOGGER.debug("sell order updated in server, order is:" + this.sellOrder.toString());
+
+                    } else {
+                        //this is the confirm of an order creation
+                        this.sellOrder.setExchangeOrderId(jsonResponse.getJSONObject("result").getLong("value"));
+                        LOGGER.debug("sell order was successfully created on server, order is: " + this.sellOrder.toString());
+                    }
+                    if (this.sellOrder.getRemainingSize().equals(0)){
+                        this.sellOrder = null;
+                    }else {
+                        this.sellOrder.setConfirmed(true);
+                    }
+
                 }
-            } else if (this.buyOrder.getInternalOrderId().equals(id)) {
-                if (tag.equals("err")) {
-                    String errCode = jsonResponse.getJSONObject("result").getJSONObject("value").getString("code");
-                    LOGGER.error("buy order: " + this.buyOrder.toString());
-                    LOGGER.error("was refused by the server with error code: " + errCode);
-                    this.buyOrder = null;
-                } else {
-                    this.buyOrder.setExchangeOrderId(jsonResponse.getJSONObject("result").getLong("value"));
-                    this.buyOrder.setUpdateTime(new Date().getTime() / 1000);
-                    LOGGER.info("buy order: " + this.buyOrder.toString());
-                    LOGGER.info("was successfully created on server");
-                }
-            } else {
-                LOGGER.error("order with id: " + id + " was not matched");
+                return;
             }
         }
+        if (this.buyOrder != null) {
+            if (this.buyOrder.getInternalOrderId().equals(id)) {
+                if (tag.equals("err")) {
+                    String errCode = jsonResponse.getJSONObject("result").getJSONObject("value").getString("code");
+                    LOGGER.debug("buy order: " + this.buyOrder.toString());
+                    LOGGER.debug("was refused by the server with error code: " + errCode);
+                    this.buyOrder = null;
+                } else {
+                    if (jsonResponse.getJSONObject("result").getString("value").equals("ok")) {
+                        //this is the confirm of an update
+                        LOGGER.debug("buy order updated in server, order is: " + this.buyOrder.toString());
+
+                    } else {
+                        //this is the confirm of an order creation
+                        this.buyOrder.setExchangeOrderId(jsonResponse.getJSONObject("result").getLong("value"));
+                        LOGGER.debug("buy order was successfully created on server, order is: " + this.buyOrder.toString());
+                    }
+                    if (this.buyOrder.getRemainingSize().equals(0)){
+                        this.buyOrder = null;
+                    }else {
+                        this.buyOrder.setConfirmed(true);
+                    }
+
+                }
+            }
+            return;
+        }
+        LOGGER.error("order with id: " + id + " was not matched");
+
+    }
+
+    public List<WebSocketMessage<String>> processErrorMessage(JSONObject jsonResponse) throws JSONException {
+        List<WebSocketMessage<String>> ret = new ArrayList<>();
+        if (this.buyOrder != null) {
+            if (this.buyOrder.getInternalOrderId().equals(jsonResponse.getInt("id"))) {
+                LOGGER.warn("Buy order was cancelled due to reason: " + jsonResponse.getJSONObject("result").getJSONObject("value").getString("code"));
+//                ret.addAll(this.cancelBuyOrder());
+                this.buyOrder = null;
+            }
+        }
+        if (this.sellOrder != null) {
+            if (this.sellOrder.getInternalOrderId().equals(jsonResponse.getInt("id"))) {
+                LOGGER.warn("Sell order was cancelled due to reason: " + jsonResponse.getJSONObject("result").getJSONObject("value").getString("code"));
+//                ret.addAll(this.cancelSellOrder());
+                this.sellOrder = null;
+            }
+        }
+        return ret;
+    }
+
+    public void setOrderCanceled(int orderId) {
+        if (this.buyOrder != null && this.buyOrder.getInternalOrderId().equals(orderId)) {
+            this.buyOrder = null;
+        }
+        if (this.sellOrder != null && this.sellOrder.getInternalOrderId().equals(orderId)) {
+            this.sellOrder = null;
+        }
+    }
+
+    private List<WebSocketMessage<String>> cancelBuyOrder() {
+        return this.CreateCancelOrder(this.buyOrder.getExchangeOrderId());
+    }
+
+    private List<WebSocketMessage<String>> cancelSellOrder() {
+        return this.CreateCancelOrder(this.sellOrder.getExchangeOrderId());
+    }
+
+    private List<WebSocketMessage<String>> CreateCancelOrder(Long exchangeOrderId) {
+        CancelOrder cancelOrder = new CancelOrder();
+        Gson gson = new Gson();
+        cancelOrder.setMethod(9);
+        this.orderId++;
+        cancelOrder.setId(this.orderId);
+        cancelOrder.getParams().getData().setMethod("cancelOrder");
+        cancelOrder.getParams().getData().setParams(exchangeOrderId);
+        String jsonCancelOrder = gson.toJson(cancelOrder);
+        List<WebSocketMessage<String>> ret = new ArrayList<>();
+        ret.add(new TextMessage(jsonCancelOrder));
+        return ret;
+    }
+
+    public void setBalanceInitialized(boolean balanceInitialized) {
+        this.balanceInitialized = balanceInitialized;
+        if (this.orderInitialized && this.balanceInitialized && this.orderFillInitialized && this.positionInitialized && this.riskSettingsInitialized && !this.readyToTrade) {
+            this.setReadyToTrade();
+        }
+    }
+
+    public boolean isOrderInitialized() {
+        return orderInitialized;
+    }
+
+    public void setOrderInitialized(boolean orderInitialized) {
+        this.orderInitialized = orderInitialized;
+        if (this.orderInitialized && this.balanceInitialized && this.orderFillInitialized && this.positionInitialized && this.riskSettingsInitialized && !this.readyToTrade) {
+            this.setReadyToTrade();
+        }
+    }
+
+    public boolean isOrderFillInitialized() {
+        return orderFillInitialized;
+
+    }
+
+    public void setOrderFillInitialized(boolean orderFillInitialized) {
+        this.orderFillInitialized = orderFillInitialized;
+        if (this.orderInitialized && this.balanceInitialized && this.orderFillInitialized && this.positionInitialized && this.riskSettingsInitialized && !this.readyToTrade) {
+            this.setReadyToTrade();
+        }
+    }
+
+    public void setPositionInitialized(boolean positionInitialized) {
+        this.positionInitialized = positionInitialized;
+        if (this.orderInitialized && this.balanceInitialized && this.orderFillInitialized && this.positionInitialized && this.riskSettingsInitialized && !this.readyToTrade) {
+            this.setReadyToTrade();
+        }
+    }
+
+    public boolean isPositionInitialized() {
+        return positionInitialized;
+    }
+
+    public boolean isRiskSettingsInitialized() {
+        return riskSettingsInitialized;
+    }
+
+    public void setRiskSettingsInitialized(boolean riskSettingsInitialized) {
+        this.riskSettingsInitialized = riskSettingsInitialized;
+        if (this.orderInitialized && this.balanceInitialized && this.orderFillInitialized && this.positionInitialized && this.riskSettingsInitialized && !this.readyToTrade) {
+            this.setReadyToTrade();
+        }
+    }
+
+    private void setReadyToTrade() {
+        this.readyToTrade = true;
+        LOGGER.info("Balance, orders, order fills, position and risk settings information received");
+        LOGGER.info("Now bot is ready to start trading");
+    }
+
+    public static BigDecimal toBigDecimal(Price p) {
+        BigDecimal ret = new BigDecimal(p.getMantissa());
+        if (ret.compareTo(BigDecimal.valueOf(0)) == 0) {
+            return ret;
+        }
+        int exponent = (int) (p.getExponent() * -1);
+        BigDecimal base = new BigDecimal(10);
+        base = base.pow(exponent);
+        ret = ret.divide(base);
+        return ret;
+
     }
 
     public BigDecimal getWallet() {
@@ -305,39 +555,8 @@ public class TradingServiceImpl {
         return balanceInitialized;
     }
 
-    public void setBalanceInitialized(boolean balanceInitialized) {
-        this.balanceInitialized = balanceInitialized;
-        if (this.isOrderInitialized() && this.isBalanceInitialized() && this.orderFillInitialized && !this.readyToTrade) {
-            this.setReadyToTrade();
-        }
-    }
-
-    public boolean isOrderInitialized() {
-        return orderInitialized;
-    }
-
-    public void setOrderInitialized(boolean orderInitialized) {
-        this.orderInitialized = orderInitialized;
-        if (this.isOrderInitialized() && this.isBalanceInitialized() && this.orderFillInitialized && !this.readyToTrade) {
-            this.setReadyToTrade();
-        }
-    }
-
-    public boolean isOrderFillInitialized() {
-        return orderFillInitialized;
-
-    }
-
-    public void setOrderFillInitialized(boolean orderFillInitialized) {
-        this.orderFillInitialized = orderFillInitialized;
-        if (this.isOrderInitialized() && this.isBalanceInitialized() && this.orderFillInitialized && !this.readyToTrade) {
-            this.setReadyToTrade();
-        }
-    }
-
-    private void setReadyToTrade() {
-        this.readyToTrade = true;
-        LOGGER.info("Balance, orders and order fills information received. now system is ready to start trading");
+    public void setReadyToTrade(boolean ready) {
+        this.readyToTrade = ready;
     }
 
     public boolean isReadyToTrade() {
@@ -350,5 +569,21 @@ public class TradingServiceImpl {
 
     public void setOrderId(int orderId) {
         this.orderId = orderId;
+    }
+
+    public Integer getPositionSize() {
+        return positionSize;
+    }
+
+    public void setPositionSize(Integer positionSize) {
+        this.positionSize = positionSize;
+    }
+
+    public BigDecimal getRiskLimit() {
+        return riskLimit;
+    }
+
+    public void setRiskLimit(BigDecimal riskLimit) {
+        this.riskLimit = riskLimit;
     }
 }

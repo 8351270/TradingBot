@@ -7,11 +7,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.WebSocketMessage;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class OrderBookServiceImpl implements MessageProcessingI {
@@ -21,8 +23,11 @@ public class OrderBookServiceImpl implements MessageProcessingI {
 
     final TradingServiceImpl tradingService;
 
-    public OrderBookServiceImpl(TradingServiceImpl tradingService) {
+    final Environment env;
+
+    public OrderBookServiceImpl(TradingServiceImpl tradingService, Environment env) {
         this.tradingService = tradingService;
+        this.env = env;
     }
 
     @Override
@@ -38,21 +43,22 @@ public class OrderBookServiceImpl implements MessageProcessingI {
                     return null;
                 }
                 int id = jsonResponse.getInt("instrumentId");
-                if (id != 1){
+                if (id != Integer.parseInt(Objects.requireNonNull(env.getProperty("instrument.code")))){
                     // check they don't change id and instrumentId
                     LOGGER.error("wrong instrument Id: " +id );
                 }else{
                     List<OrderBookItem> asksList = this.buildBookOrderItem(jsonResponse.getJSONArray("asks"));
                     List<OrderBookItem> bidsList = this.buildBookOrderItem(jsonResponse.getJSONArray("bids"));
-                    // we only start creating orders once the balance and orders information is received
+                    // we only start creating orders once the balance orders and orderFills information is received
                     if (!bidsList.isEmpty() && !asksList.isEmpty() && this.tradingService.isReadyToTrade()){
-//                        return this.tradingService.checkForConditionsAndCreateOrder(asksList,bidsList);
+                        return this.tradingService.checkForConditionsAndCreateOrder(asksList,bidsList);
                     }
                 }
             }
 
         } catch (JSONException ex){
-            LOGGER.error("Error while parsing order book ws JSON message " + ex.getMessage());
+            LOGGER.error("Error while parsing order book JSON message " + ex.getMessage());
+
         }
 
         return null;

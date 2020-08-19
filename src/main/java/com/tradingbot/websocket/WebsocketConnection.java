@@ -8,7 +8,6 @@ import org.springframework.web.socket.*;
 import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 
-import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.net.URI;
 
@@ -28,8 +27,7 @@ public class WebsocketConnection {
     }
 
     // when system is shutting down we first cancel all open orders
-    @PreDestroy
-    public void destroy() throws IOException {
+    public void destroy() throws IOException, InterruptedException {
         LOGGER.info("Trading bot shutting down, will first cancel all open orders");
         this.sessionHandler.onShutDown(this.session);
     }

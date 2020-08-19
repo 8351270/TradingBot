@@ -7,20 +7,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketMessage;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class SubscriptionServiceImpl {
 
-    private final List<Channel> publicChannels;
+    private final Set<Channel> publicChannels;
 
-    private final List<Channel> privateChannels;
+    private final Set<Channel> privateChannels;
 
     public SubscriptionServiceImpl() {
-        this.publicChannels = new ArrayList<>();
-        this.privateChannels = new ArrayList<>();
+        this.publicChannels = new HashSet<>();
+        this.privateChannels = new HashSet<>();
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SubscriptionServiceImpl.class);
@@ -35,14 +33,14 @@ public class SubscriptionServiceImpl {
         privateChannels.add(ch);
         ch = new Channel(8,"balance");
         privateChannels.add(ch);
-//        ch = new Channel(9,"positions");
-//        privateChannels.add(ch);
-//        ch = new Channel(10,"riskSettings");
-//        privateChannels.add(ch);
+        ch = new Channel(9,"positions");
+        privateChannels.add(ch);
+        ch = new Channel(10,"riskSettings");
+        privateChannels.add(ch);
 
         for (Channel channel:privateChannels) {
             WebSocketMessage<String> subsMessage = new TextMessage(channel.toSubscribeString());
-            LOGGER.info("Subscribing to channel: "+ channel.getName());
+            LOGGER.debug("Subscribing to channel: "+ channel.getName());
             ret.add(subsMessage);
         }
         return ret;
@@ -64,7 +62,7 @@ public class SubscriptionServiceImpl {
 
         for (Channel channel:publicChannels) {
             WebSocketMessage<String> subsMessage = new TextMessage(channel.toSubscribeString());
-            LOGGER.info("Subscribing to channel: "+ channel.getName());
+            LOGGER.debug("Subscribing to channel: "+ channel.getName());
             ret.add(subsMessage);
         }
         return ret;

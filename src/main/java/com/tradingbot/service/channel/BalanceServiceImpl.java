@@ -1,11 +1,13 @@
 package com.tradingbot.service.channel;
 
-import com.google.gson.Gson;
 import com.tradingbot.service.TradingServiceImpl;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.WebSocketMessage;
 
@@ -14,6 +16,9 @@ import java.util.List;
 
 @Service
 public class BalanceServiceImpl implements MessageProcessingI {
+
+    @Autowired
+    private ApplicationContext appContext;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BalanceServiceImpl.class);
 
@@ -29,8 +34,13 @@ public class BalanceServiceImpl implements MessageProcessingI {
     @Override
     public List<WebSocketMessage<String>> processMessage(JSONObject jsonResponse) {
 
-        Gson g = new Gson();
         try {
+            String tag = jsonResponse.getJSONObject("result").getJSONObject("data").getString("tag");
+            if (tag.equals("err")){
+                LOGGER.error("error message received from channel balances, message is: " +jsonResponse.getJSONObject("result").getJSONObject("data").getJSONObject("value").getString("code"));
+                SpringApplication.exit(appContext, () -> 0);
+//                return null;
+            }
             String type= jsonResponse.getJSONObject("result").getJSONObject("data").getJSONObject("value").getString("type");
             JSONObject jsonObject;
             if (type.equals("snapshot")){
@@ -38,8 +48,9 @@ public class BalanceServiceImpl implements MessageProcessingI {
             }else {
                 jsonObject =jsonResponse.getJSONObject("result").getJSONObject("data").getJSONObject("value").getJSONObject("payload");
             }
-            Long updateTime = jsonObject.getJSONObject("updateTime").getLong("seconds");
+            long updateTime = jsonObject.getJSONObject("updateTime").getLong("seconds");
 
+//            public BigDecimal(BigInteger unscaledVal, int scale)
             BigDecimal ordersMargin = toBigDecimal(jsonObject.getJSONObject("ordersMargin"));
             if (this.lastUpdated==0){
                 this.tradingService.setOrdersMargin(ordersMargin);
@@ -62,19 +73,19 @@ public class BalanceServiceImpl implements MessageProcessingI {
                 this.tradingService.setBalanceInitialized(true);
             }else {
                 if (!ordersMargin.equals(this.tradingService.getOrdersMargin())){
-                    LOGGER.info("order margin from balance channel updated, old value: " + this.tradingService.getOrdersMargin() + " new value: " + ordersMargin);
+                    LOGGER.debug("order margin from balance channel updated, old value: " + this.tradingService.getOrdersMargin() + " new value: " + ordersMargin);
                     this.tradingService.setOrdersMargin(ordersMargin);
                 }
 
                 BigDecimal wallet = toBigDecimal(jsonObject.getJSONObject("wallet"));
                 if (!wallet.equals(this.tradingService.getWallet())){
-                    LOGGER.info("wallet from balance channel updated, old value: " + this.tradingService.getWallet() + " new value: " + wallet);
+                    LOGGER.debug("wallet from balance channel updated, old value: " + this.tradingService.getWallet() + " new value: " + wallet);
                     this.tradingService.setWallet(wallet);
                 }
 
                 BigDecimal positionsMargin = toBigDecimal(jsonObject.getJSONObject("positionsMargin"));
                 if (!positionsMargin.equals(this.tradingService.getPositionsMargin())){
-                    LOGGER.info("positions margin from balance channel updated, old value: " + this.tradingService.getPositionsMargin() + " new value: " + positionsMargin);
+                    LOGGER.debug("positions margin from balance channel updated, old value: " + this.tradingService.getPositionsMargin() + " new value: " + positionsMargin);
                     this.tradingService.setPositionsMargin(positionsMargin);
                 }
 
@@ -87,12 +98,12 @@ public class BalanceServiceImpl implements MessageProcessingI {
 
                 BigDecimal available = toBigDecimal(jsonObject.getJSONObject("available"));
                 if (!available.equals(this.tradingService.getAvailable())){
-                    LOGGER.info("available from balance channel updated, old value: " + this.tradingService.getAvailable() + " new value: " + available);
+                    LOGGER.debug("available from balance channel updated, old value: " + this.tradingService.getAvailable() + " new value: " + available);
                     this.tradingService.setAvailable(available);
                 }
                 BigDecimal borrowed = toBigDecimal(jsonObject.getJSONObject("borrowed"));
                 if (!borrowed.equals(this.tradingService.getBorrowed())){
-                    LOGGER.info("borrowed from balance channel updated, old value: " + this.tradingService.getBorrowed() + " new value: " + borrowed);
+                    LOGGER.debug("borrowed from balance channel updated, old value: " + this.tradingService.getBorrowed() + " new value: " + borrowed);
                     this.tradingService.setBorrowed(borrowed);
                 }
             }
@@ -104,6 +115,7 @@ public class BalanceServiceImpl implements MessageProcessingI {
     }
 
     public static BigDecimal toBigDecimal(JSONObject item) throws JSONException {
+
         BigDecimal ret = new BigDecimal(item.getLong("mantissa"));
         if (ret.compareTo(BigDecimal.valueOf(0))==0){
             return ret;

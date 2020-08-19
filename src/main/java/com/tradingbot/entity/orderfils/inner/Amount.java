@@ -1,10 +1,10 @@
 
-package com.tradingbot.entity.order.response;
+package com.tradingbot.entity.orderfils.inner;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class Price {
+public class Amount {
 
     @SerializedName("mantissa")
     @Expose
@@ -17,7 +17,7 @@ public class Price {
      * No args constructor for use in serialization
      * 
      */
-    public Price() {
+    public Amount() {
     }
 
     /**
@@ -25,7 +25,7 @@ public class Price {
      * @param mantissa
      * @param exponent
      */
-    public Price(Long mantissa, Long exponent) {
+    public Amount(Long mantissa, Long exponent) {
         super();
         this.mantissa = mantissa;
         this.exponent = exponent;
@@ -39,7 +39,7 @@ public class Price {
         this.mantissa = mantissa;
     }
 
-    public Price withMantissa(Long mantissa) {
+    public Amount withMantissa(Long mantissa) {
         this.mantissa = mantissa;
         return this;
     }
@@ -52,7 +52,7 @@ public class Price {
         this.exponent = exponent;
     }
 
-    public Price withExponent(Long exponent) {
+    public Amount withExponent(Long exponent) {
         this.exponent = exponent;
         return this;
     }

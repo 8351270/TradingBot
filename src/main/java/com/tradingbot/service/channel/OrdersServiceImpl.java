@@ -9,12 +9,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.WebSocketMessage;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class OrdersServiceImpl implements MessageProcessingI {
@@ -24,8 +25,11 @@ public class OrdersServiceImpl implements MessageProcessingI {
     final
     TradingServiceImpl tradingService;
 
-    public OrdersServiceImpl(TradingServiceImpl tradingService) {
+    final Environment env;
+
+    public OrdersServiceImpl(TradingServiceImpl tradingService, Environment env) {
         this.tradingService = tradingService;
+        this.env = env;
     }
 
     @Override
@@ -42,19 +46,18 @@ public class OrdersServiceImpl implements MessageProcessingI {
             JSONObject ordersObject = jsonResponse.getJSONObject("result").getJSONObject("data").getJSONObject("value").getJSONObject("payload");
             ArrayList<OrderResponse> lastOrders = new ArrayList<>();
             Gson g = new Gson();
-            if (type.equals("snapshot")){
+            if (type.equals("snapshot")) {
                 JSONArray jsonArray = ordersObject.toJSONArray(ordersObject.names());
                 if (jsonArray != null) {
                     for (int i = 0; i < jsonArray.length(); i++) {
                         OrderResponse order = g.fromJson((jsonArray).getString(i), OrderResponse.class);
-                        //we only work with instrument id 1
-                        if (order.getInstrument() == 1) {
+                        if (order.getInstrument() == Integer.parseInt(Objects.requireNonNull(env.getProperty("instrument.code")))) {
                             lastOrders.add(order);
                         }
                     }
                 }
                 // is update
-            }else {
+            } else {
                 OrderResponse order = g.fromJson(String.valueOf(ordersObject), OrderResponse.class);
                 lastOrders.add(order);
             }
@@ -63,51 +66,31 @@ public class OrdersServiceImpl implements MessageProcessingI {
                 // this is in case an order was open and the bot went down
                 // so the next time bot starts, it won't create any order until checking for open ones
                 if (order.getSide().equals("SELL")) {
-                    if (this.tradingService.getSellOrder() == null && order.getStatus().equals("PARTIALLY_FILLED")) {
-                        OpenOrder oo = new OpenOrder();
-                        oo.setUpdateTime(order.getUpdateTime().getSeconds());
-                        oo.setExchangeOrderId(order.getId());
-                        // in this case we don't have the real id
-                        oo.setInternalOrderId(0);
-                        oo.setRemainingSize(order.getRemainingSize());
-                        oo.setTotalSize((order.getInitialSize()));
+                    if (this.tradingService.getSellOrder() == null && (order.getStatus().equals("PARTIALLY_FILLED") || order.getStatus().equals("NEW"))) {
+                        this.tradingService.setOrderId(this.tradingService.getOrderId() + 1);
+                        OpenOrder oo = new OpenOrder(order, this.tradingService.getOrderId());
                         this.tradingService.setSellOrder(oo);
                     } else if (this.tradingService.getSellOrder() != null) {
                         if (this.tradingService.getSellOrder().getUpdateTime() <= order.getUpdateTime().getSeconds()) {
-                            if (tradingService.getSellOrder().getExchangeOrderId().equals(order.getId())) {
+                            if (tradingService.getSellOrder().getExchangeOrderId() != null) {
                                 this.tradingService.updateOrderStatus(order);
                             }
                         }
                     }
                 }
                 if (order.getSide().equals("BUY")) {
-                    if (this.tradingService.getBuyOrder() == null && order.getStatus().equals("PARTIALLY_FILLED")) {
-                        OpenOrder oo = new OpenOrder();
-                        oo.setUpdateTime(order.getUpdateTime().getSeconds());
-                        oo.setExchangeOrderId(order.getId());
-                        // in this case we don't have the real id
-                        oo.setInternalOrderId(0);
-                        oo.setRemainingSize(order.getRemainingSize());
-                        oo.setTotalSize((order.getInitialSize()));
+                    if (this.tradingService.getBuyOrder() == null && (order.getStatus().equals("PARTIALLY_FILLED") || order.getStatus().equals("NEW"))) {
+                        this.tradingService.setOrderId(this.tradingService.getOrderId() + 1);
+                        OpenOrder oo = new OpenOrder(order, this.tradingService.getOrderId());
                         this.tradingService.setBuyOrder(oo);
                     } else if (this.tradingService.getBuyOrder() != null) {
                         if (this.tradingService.getBuyOrder().getUpdateTime() <= order.getUpdateTime().getSeconds()) {
-                            if (this.tradingService.getBuyOrder().getExchangeOrderId()!=null){
-                                if (tradingService.getBuyOrder().getExchangeOrderId().equals(order.getId())) {
-                                    this.tradingService.updateOrderStatus(order);
-                                }
-                                // the buy update is received before from this channel that the confirmation
-                                // so the is not exchange id yet
-                                //TODO REVIEW THIS
-                            }else {
-                                tradingService.getBuyOrder().setExchangeOrderId(order.getId());
+                            if (this.tradingService.getBuyOrder().getExchangeOrderId() != null) {
+                                this.tradingService.updateOrderStatus(order);
                             }
-
-
                         }
                     }
                 }
-
             }
             if (!this.tradingService.isOrderInitialized()) {
                 this.tradingService.setOrderInitialized(true);
@@ -118,18 +101,4 @@ public class OrdersServiceImpl implements MessageProcessingI {
         }
         return null;
     }
-
-    public static BigDecimal toBigDecimal(Long mantissa, Long exponent) {
-        BigDecimal ret = new BigDecimal(mantissa);
-        if (ret.compareTo(BigDecimal.valueOf(0)) == 0) {
-            return ret;
-        }
-        exponent = exponent * -1;
-        BigDecimal base = new BigDecimal(10);
-        base = base.pow(Math.toIntExact(exponent));
-        ret = ret.divide(base);
-        return ret;
-
-    }
-
 }

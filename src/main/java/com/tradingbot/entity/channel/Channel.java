@@ -1,5 +1,7 @@
 package com.tradingbot.entity.channel;
 
+import java.util.Objects;
+
 public class Channel {
 
     private int id;
@@ -41,5 +43,19 @@ public class Channel {
 
     public void setSubscribed(boolean subscribed) {
         this.subscribed = subscribed;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Channel)) return false;
+        Channel channel = (Channel) o;
+        return id == channel.id &&
+                name.equals(channel.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name);
     }
 }

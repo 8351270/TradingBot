@@ -1,24 +1,24 @@
-
 package com.tradingbot.entity.positions.inner;
 
-import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
+import java.io.Serializable;
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "mantissa",
-    "exponent"
+        "mantissa",
+        "exponent"
 })
-public class Margin implements Serializable
+public class PartialLiquidationPrice implements Serializable
 {
 
     @JsonProperty("mantissa")
     private Long mantissa;
     @JsonProperty("exponent")
     private Long exponent;
-    private final static long serialVersionUID = -8291691234228992064L;
+    private final static long serialVersionUID = 7989082510859242475L;
 
     @JsonProperty("mantissa")
     public Long getMantissa() {
@@ -30,7 +30,7 @@ public class Margin implements Serializable
         this.mantissa = mantissa;
     }
 
-    public Margin withMantissa(Long mantissa) {
+    public PartialLiquidationPrice withMantissa(Long mantissa) {
         this.mantissa = mantissa;
         return this;
     }
@@ -45,14 +45,14 @@ public class Margin implements Serializable
         this.exponent = exponent;
     }
 
-    public Margin withExponent(Long exponent) {
+    public PartialLiquidationPrice withExponent(Long exponent) {
         this.exponent = exponent;
         return this;
     }
 
     @Override
     public String toString() {
-        return "Margin{" +
+        return "PartialLiquidationPrice{" +
                 "mantissa=" + mantissa +
                 ", exponent=" + exponent +
                 '}';

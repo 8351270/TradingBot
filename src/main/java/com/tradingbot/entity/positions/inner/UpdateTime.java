@@ -1,17 +1,24 @@
 
 package com.tradingbot.entity.positions.inner;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-public class UpdateTime {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({
+    "seconds",
+    "nanos"
+})
+public class UpdateTime implements Serializable
+{
 
-    @SerializedName("seconds")
-    @Expose
+    @JsonProperty("seconds")
     private Long seconds;
-    @SerializedName("nanos")
-    @Expose
+    @JsonProperty("nanos")
     private Long nanos;
+    private final static long serialVersionUID = -1653056888652451964L;
 
     /**
      * No args constructor for use in serialization
@@ -31,10 +38,12 @@ public class UpdateTime {
         this.nanos = nanos;
     }
 
+    @JsonProperty("seconds")
     public Long getSeconds() {
         return seconds;
     }
 
+    @JsonProperty("seconds")
     public void setSeconds(Long seconds) {
         this.seconds = seconds;
     }
@@ -44,10 +53,12 @@ public class UpdateTime {
         return this;
     }
 
+    @JsonProperty("nanos")
     public Long getNanos() {
         return nanos;
     }
 
+    @JsonProperty("nanos")
     public void setNanos(Long nanos) {
         this.nanos = nanos;
     }
@@ -57,4 +68,11 @@ public class UpdateTime {
         return this;
     }
 
+    @Override
+    public String toString() {
+        return "UpdateTime{" +
+                "seconds=" + seconds +
+                ", nanos=" + nanos +
+                '}';
+    }
 }

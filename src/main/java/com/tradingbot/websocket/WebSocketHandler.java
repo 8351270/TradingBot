@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.List;
 
@@ -31,7 +30,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
         this.subscriptionService = subscriptionService;
     }
 
-    public void onShutDown(WebSocketSession session) throws IOException {
+    public void onShutDown(WebSocketSession session) throws IOException, InterruptedException {
         this.messageResolverService.cancelAllOrders(session);
     }
 
@@ -86,4 +85,10 @@ public class WebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         LOGGER.error("connection closed");
     }
+
+    public void sendPingMessage(WebSocketSession session) throws IOException {
+        WebSocketMessage<String> ping = new TextMessage("{ping}");
+        session.sendMessage(ping);
+    }
+
 }
