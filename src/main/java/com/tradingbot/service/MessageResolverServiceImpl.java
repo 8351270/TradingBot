@@ -148,7 +148,7 @@ public class MessageResolverServiceImpl implements MessageProcessingI {
     public void cancelAllOrders(WebSocketSession session) throws IOException, InterruptedException {
         this.tradingService.setReadyToTrade(false);
         //stop trading and give it two seconds to receive any pending order response
-//        Thread.sleep(1000);
+
         if (this.tradingService.getSellOrder() != null) {
             session.sendMessage(CreateCancelOrder(this.tradingService.getSellOrder().getExchangeOrderId()));
             LOGGER.info("cancelling open sell order");
@@ -159,9 +159,10 @@ public class MessageResolverServiceImpl implements MessageProcessingI {
         if (this.tradingService.getBuyOrder() != null) {
             session.sendMessage(CreateCancelOrder(this.tradingService.getBuyOrder().getExchangeOrderId()));
             LOGGER.info("cancelling open buy order");
-                this.tradingService.setBuyOrder(null);
+            this.tradingService.setBuyOrder(null);
         } else {
             LOGGER.info("No buy order to cancel");
         }
+        Thread.sleep(1000);
     }
 }
