@@ -37,6 +37,8 @@ Under the package “service.channel” there is a Spring service for each chann
 Trading Bot will execute on a single thread, re connect, read active orders and keep trading in case of connection lost. Also it will cancel all open orders on shutdown. Code related with this functionalities can be found under “websocket” package.
 
 
+Disclaimer
 
+This robot is only for educational purposes, as an example of a simple trading bot without a complete logic.
 
 
